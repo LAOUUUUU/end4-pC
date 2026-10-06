@@ -6,7 +6,8 @@ import SwiftUI
 /// Sizes and opacities of the lines match `modules/common/widgets/Lyrics.qml`.
 struct LyricsView: View {
     @ObservedObject var model: LyricsModel
-    @ObservedObject var visualizer: VisualizerModel
+    /// Not observed here: the visualizer redraws itself 30 times a second, and this view must not.
+    let visualizer: VisualizerModel
     @ObservedObject var theme: ThemeModel
 
     private static let lineSpacing: CGFloat = 6
@@ -30,7 +31,12 @@ struct LyricsView: View {
         }
         .padding(16)
         .frame(minWidth: 320, minHeight: 200, alignment: .topLeading)
-        .background(backdrop)
+        .background {
+            ZStack {
+                backdrop
+                WindowDragHandle()
+            }
+        }
     }
 
     @ViewBuilder
@@ -63,6 +69,7 @@ struct LyricsView: View {
     /// The cover, blurred, behind a gradient of its colours.
     private var backdrop: some View {
         CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath)
+            .equatable()
     }
 }
 

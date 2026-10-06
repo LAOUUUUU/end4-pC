@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var offsetSubscription: AnyCancellable?
     private var expandSubscription: AnyCancellable?
     private var mainMenu: MainMenuController?
+    private var panelWasVisibleBeforeMenu = false
     private var quickMenu: NSMenu?
     private var fullscreenMenu: FullscreenMenuController?
     private var playerSubscription: AnyCancellable?
@@ -74,6 +75,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         fullscreenMenu = fullscreen
         menu.openFullscreen = { fullscreen.show() }
         menu.openSettings = { fullscreen.show(page: .settings) }
+        // The lyric panel steps aside while the full-screen menu is open, and returns when it closes.
+        fullscreen.onVisibilityChange = { [weak self] menuOpen in
+            guard let self, let panel = self.panel else { return }
+            if menuOpen {
+                self.panelWasVisibleBeforeMenu = panel.isVisible
+                panel.orderOut(nil)
+            } else if self.panelWasVisibleBeforeMenu {
+                panel.orderFrontRegardless()
+            }
+        }
         if theme.settings.openMainMenuAtLaunch {
             fullscreen.show()
         }

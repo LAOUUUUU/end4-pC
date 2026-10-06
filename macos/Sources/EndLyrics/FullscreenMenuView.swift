@@ -1,4 +1,5 @@
 import Appearance
+import AudioVisualizer
 import LyricsCore
 import SwiftUI
 
@@ -7,7 +8,7 @@ import SwiftUI
 struct FullscreenMenuView: View {
     @ObservedObject var model: LyricsModel
     @ObservedObject var theme: ThemeModel
-    @ObservedObject var visualizer: VisualizerModel
+    let visualizer: VisualizerModel
     @ObservedObject var hub: WidgetHub
     @ObservedObject var navigator: FullscreenNavigator
     let actions: MainMenuController
@@ -21,6 +22,9 @@ struct FullscreenMenuView: View {
 
             ZStack(alignment: .topTrailing) {
                 CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath)
+                    .equatable()
+                    .ignoresSafeArea()
+                AmbientOrbs(colors: theme.backgroundColors)
                     .ignoresSafeArea()
 
                 Group {
@@ -87,14 +91,7 @@ struct FullscreenMenuView: View {
     private func nowPlayingColumn(lyricSize: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .bottom, spacing: 18) {
-                AsyncImage(url: model.artworkURL) { image in
-                    image.resizable().scaledToFill()
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.1))
-                }
-                .frame(width: 160, height: 160)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
+                BeatCover(url: model.artworkURL, visualizer: visualizer, accent: theme.accent, size: 160)
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(model.nowPlaying ?? "Nothing playing")
@@ -125,47 +122,94 @@ struct FullscreenMenuView: View {
         }
     }
 
+    /// The actions that are not already in the controls, the header, Settings or the menu bar.
     private var tiles: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            tile("play.fill", "Play / Pause", "Space") { model.togglePlayPause() }
-            tile("rectangle.expand.vertical", "Now Playing", model.expanded ? "On" : "Off") { model.expanded.toggle() }
-            tile("square.and.arrow.down", "Save .lrc", "Timed lyrics") { actions.saveLRC() }
-            tile("doc.text", "Save .txt", "Plain lyrics") { actions.saveTXT() }
-            tile("minus.circle", "Lyrics Earlier", "−0.25 s") { actions.offsetEarlier() }
-            tile("plus.circle", "Lyrics Later", "+0.25 s") { actions.offsetLater() }
-            tile("arrow.counterclockwise", "Reset Timing", "0 s") { actions.offsetReset() }
-            tile("waveform", "Mirror Bars", theme.settings.style == .mirror ? "On" : "Off") {
-                theme.settings.style = theme.settings.style == .mirror ? .bars : .mirror
+        VStack(alignment: .leading, spacing: 8) {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                tile("square.and.arrow.down", "Save .lrc", "Timed") { actions.saveLRC() }
+                tile("doc.text", "Save .txt", "Plain") { actions.saveTXT() }
+                tile("doc.on.clipboard", "Copy Lyrics", "Whole song") { actions.copyAllLyrics() }
+                tile("gearshape", "Settings", "All options") { navigator.page = .settings }
             }
-            tile("rectangle.compress.vertical", "Compact", theme.settings.compactMode ? "On" : "Off") {
-                theme.settings.compactMode.toggle()
-            }
-            tile("hand.tap", "Click to Jump", theme.settings.clickToSeek ? "On" : "Off") {
-                theme.settings.clickToSeek.toggle()
-            }
-            tile("gearshape", "Settings", "Player, colours, bars") { navigator.page = .settings }
-            tile("doc.on.doc", "Copy Lyric", "Current line") { actions.copyCurrentLyric() }
-            tile("doc.on.clipboard", "Copy Lyrics", "Whole song") { actions.copyAllLyrics() }
-            tile("power", "Quit", "Close EndLyrics") { NSApp.terminate(nil) }
+            timingCard
         }
+    }
+
+    /// Nudges the lyric timing in quarter-second steps, with a reset.
+    private var timingCard: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "timer")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(theme.accent)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Lyric timing").font(.system(size: 12, weight: .semibold))
+                Text(String(format: "%+.2f s", theme.settings.lyricOffset))
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            Spacer(minLength: 0)
+            Button { actions.offsetEarlier() } label: { Image(systemName: "minus").frame(width: 22, height: 20) }
+                .buttonStyle(RippleButtonStyle(radius: 6))
+            Button { actions.offsetReset() } label: { Image(systemName: "arrow.counterclockwise").frame(width: 22, height: 20) }
+                .buttonStyle(RippleButtonStyle(radius: 6))
+            Button { actions.offsetLater() } label: { Image(systemName: "plus").frame(width: 22, height: 20) }
+                .buttonStyle(RippleButtonStyle(radius: 6))
+        }
+        .font(.system(size: 11, weight: .semibold))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.12)))
     }
 
     private func tile(_ symbol: String, _ title: String, _ subtitle: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
                 Image(systemName: symbol)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(theme.accent)
+                    .frame(width: 18)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title).font(.system(size: 12, weight: .semibold))
+                    Text(subtitle).font(.system(size: 9)).foregroundStyle(.white.opacity(0.6))
+                }
                 Spacer(minLength: 0)
-                Text(title).font(.system(size: 13, weight: .semibold))
-                Text(subtitle).font(.system(size: 10)).foregroundStyle(.white.opacity(0.6))
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-            .background(RoundedRectangle(cornerRadius: 14).fill(.ultraThinMaterial))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.12)))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.12)))
             .contentShape(Rectangle())
         }
-        .buttonStyle(RippleButtonStyle(radius: 14))
+        .buttonStyle(RippleButtonStyle(radius: 12))
+    }
+}
+
+/// Slow drifting colour orbs behind the menu, in the cover's colours.
+struct AmbientOrbs: View {
+    let colors: [Color]
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            GeometryReader { geometry in
+                ZStack {
+                    ForEach(Array(colors.prefix(3).enumerated()), id: \.offset) { index, color in
+                        let phase = t * 0.05 + Double(index) * 2.1
+                        Circle()
+                            .fill(color.opacity(0.35))
+                            .frame(width: geometry.size.width * 0.6, height: geometry.size.width * 0.6)
+                            .blur(radius: 90)
+                            .offset(
+                                x: CGFloat(sin(phase)) * geometry.size.width * 0.3,
+                                y: CGFloat(cos(phase * 0.8)) * geometry.size.height * 0.3
+                            )
+                    }
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+            }
+        }
+        .allowsHitTesting(false)
     }
 }

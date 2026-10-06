@@ -44,7 +44,7 @@ Buttons are Material-style, ported from the shell's ripple button: a flash from 
 
 ### Main menu
 
-The full-screen main menu opens when EndLyrics starts. Turn this off under Settings → "Open the main menu when EndLyrics starts". The lyric window is still shown alongside it.
+The full-screen main menu opens when EndLyrics starts. While it is open, the floating lyric panel steps aside and returns when you close the menu. Turn this off under Settings → "Open the main menu when EndLyrics starts". The lyric window is still shown alongside it.
 
 Lyrics → **Copy All Lyrics** (⌥⌘⇧C) copies the whole song's lyrics to the clipboard, as plain text.
 

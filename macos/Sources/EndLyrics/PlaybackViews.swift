@@ -26,9 +26,9 @@ struct PlaybackControlsView: View {
             model.togglePlayPause()
         } label: {
             Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.95))
-                .frame(width: 30, height: 26)
+                .frame(width: 26, height: 22)
                 .contentTransition(.symbolEffect(.replace))
                 .contentShape(Rectangle())
         }
@@ -40,9 +40,9 @@ struct PlaybackControlsView: View {
             model.command(command)
         } label: {
             Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.9))
-                .frame(width: 26, height: 24)
+                .frame(width: 22, height: 20)
                 .contentShape(Rectangle())
         }
         .buttonStyle(RippleButtonStyle(radius: 13))
@@ -51,9 +51,9 @@ struct PlaybackControlsView: View {
     private func toggle(_ symbol: String, on: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(on ? theme.accent : .white.opacity(0.45))
-                .frame(width: 24, height: 24)
+                .frame(width: 20, height: 20)
                 .contentShape(Rectangle())
         }
         .buttonStyle(RippleButtonStyle(radius: 12, toggled: on, accent: theme.accent))

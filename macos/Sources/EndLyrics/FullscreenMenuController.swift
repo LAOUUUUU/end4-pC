@@ -3,8 +3,16 @@ import SwiftUI
 
 /// A window that closes on Escape, so the full-screen menu can be left with the keyboard.
 final class EscapableWindow: NSWindow {
+    /// Called when the window closes, however it closes.
+    var onClose: (() -> Void)?
+
     override func cancelOperation(_ sender: Any?) {
         close()
+    }
+
+    override func close() {
+        super.close()
+        onClose?()
     }
 }
 
@@ -24,6 +32,8 @@ final class FullscreenNavigator: ObservableObject {
 final class FullscreenMenuController {
     private var window: NSWindow?
     let navigator = FullscreenNavigator()
+    /// Called with true when the menu opens and false when it closes. The app uses it to hide the lyric panel.
+    var onVisibilityChange: ((Bool) -> Void)?
     private let model: LyricsModel
     private let theme: ThemeModel
     private let visualizer: VisualizerModel
@@ -42,6 +52,7 @@ final class FullscreenMenuController {
         navigator.page = page
         if let window {
             window.makeKeyAndOrderFront(nil)
+            onVisibilityChange?(true)
             return
         }
 
@@ -65,9 +76,11 @@ final class FullscreenMenuController {
             actions: actions,
             close: { [weak window] in window?.close() }
         ))
+        window.onClose = { [weak self] in self?.onVisibilityChange?(false) }
         window.center()
         window.makeKeyAndOrderFront(nil)
         window.toggleFullScreen(nil)
         self.window = window
+        onVisibilityChange?(true)
     }
 }

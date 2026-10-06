@@ -5,7 +5,7 @@ import SwiftUI
 /// The cover is shown with the attribution and link back to Spotify that its developer policy requires.
 struct NowPlayingView: View {
     @ObservedObject var model: LyricsModel
-    @ObservedObject var visualizer: VisualizerModel
+    let visualizer: VisualizerModel
     @ObservedObject var theme: ThemeModel
 
     var body: some View {
@@ -60,17 +60,23 @@ struct NowPlayingView: View {
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Without a backdrop, the white text sits on whatever is behind the panel and disappears.
-        .background(CoverBackdrop(url: model.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath))
+        .background(CoverBackdrop(url: model.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath)
+                .equatable())
     }
 }
 
 /// The window background: a custom image if one is set, otherwise the cover, blurred behind a gradient.
 /// The cover is only used as a blurred backdrop, so it cannot be read off the panel.
-struct CoverBackdrop: View {
+struct CoverBackdrop: View, Equatable {
     let url: URL?
     let colors: [Color]
     var blur: Double = 40
     var imagePath: String?
+
+    /// Equal inputs mean the same picture, so SwiftUI can skip redrawing the blur.
+    static func == (lhs: CoverBackdrop, rhs: CoverBackdrop) -> Bool {
+        lhs.url == rhs.url && lhs.colors == rhs.colors && lhs.blur == rhs.blur && lhs.imagePath == rhs.imagePath
+    }
 
     var body: some View {
         ZStack {
