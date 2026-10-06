@@ -85,3 +85,19 @@ final class LaunchSettingTests: XCTestCase {
         XCTAssertTrue(decoded.openMainMenuAtLaunch)
     }
 }
+
+final class PanelItemSettingsTests: XCTestCase {
+    func testPanelShowsEverythingByDefault() {
+        let settings = AppSettings()
+
+        XCTAssertTrue(settings.panelShowsVisualizer)
+        XCTAssertTrue(settings.panelShowsControls)
+    }
+
+    func testOlderSettingsKeepThePanelDefaults() throws {
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"barCount":16}"#.utf8))
+
+        XCTAssertTrue(decoded.panelShowsVisualizer)
+        XCTAssertTrue(decoded.panelShowsControls)
+    }
+}

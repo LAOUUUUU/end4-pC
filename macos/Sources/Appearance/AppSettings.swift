@@ -59,6 +59,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var notifyOnTrackChange = false
     /// Open the full-screen main menu when the app starts.
     public var openMainMenuAtLaunch = true
+    /// Show the visualizer in the lyric panel.
+    public var panelShowsVisualizer = true
+    /// Show the progress bar, volume and playback controls in the lyric panel.
+    public var panelShowsControls = true
 
     public init() {}
 
@@ -80,12 +84,15 @@ public struct AppSettings: Codable, Equatable, Sendable {
         backgroundImagePath = try c.decodeIfPresent(String.self, forKey: .backgroundImagePath)
         notifyOnTrackChange = try c.decodeIfPresent(Bool.self, forKey: .notifyOnTrackChange) ?? defaults.notifyOnTrackChange
         openMainMenuAtLaunch = try c.decodeIfPresent(Bool.self, forKey: .openMainMenuAtLaunch) ?? defaults.openMainMenuAtLaunch
+        panelShowsVisualizer = try c.decodeIfPresent(Bool.self, forKey: .panelShowsVisualizer) ?? defaults.panelShowsVisualizer
+        panelShowsControls = try c.decodeIfPresent(Bool.self, forKey: .panelShowsControls) ?? defaults.panelShowsControls
         player = try c.decodeIfPresent(PlayerChoice.self, forKey: .player) ?? defaults.player
     }
 
     private enum Keys: String, CodingKey {
         case barCount, style, showPeakCaps, colorSource, solidColor, lyricOffset, compactMode
         case clickToSeek, lyricScale, backgroundBlur, backgroundImagePath, notifyOnTrackChange, player, openMainMenuAtLaunch
+        case panelShowsVisualizer, panelShowsControls
     }
 
     /// The same settings with out-of-range values pulled back into the allowed set.

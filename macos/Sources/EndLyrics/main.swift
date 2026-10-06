@@ -18,7 +18,13 @@ struct PanelRoot: View {
             }
         }
         .padding(0)
-        .frame(width: model.expanded ? 420 : 360, height: model.expanded ? 560 : 360, alignment: .topLeading)
+        .frame(
+            minWidth: model.expanded ? 420 : 300,
+            maxWidth: model.expanded ? 420 : .infinity,
+            minHeight: model.expanded ? 560 : 260,
+            maxHeight: model.expanded ? 560 : .infinity,
+            alignment: .topLeading
+        )
         .animation(.easeInOut(duration: 0.3), value: model.expanded)
     }
 }
@@ -37,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var expandSubscription: AnyCancellable?
     private var mainMenu: MainMenuController?
     private var panelWasVisibleBeforeMenu = false
+    private var standardSize = NSSize(width: 360, height: 360)
     private var quickMenu: NSMenu?
     private var fullscreenMenu: FullscreenMenuController?
     private var playerSubscription: AnyCancellable?
@@ -76,12 +83,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.openFullscreen = { fullscreen.show() }
         menu.openSettings = { fullscreen.show(page: .settings) }
         // The lyric panel steps aside while the full-screen menu is open, and returns when it closes.
-        fullscreen.onVisibilityChange = { [weak self] menuOpen in
+        fullscreen.onVisibilityChange = { [weak self] menuShown in
             guard let self, let panel = self.panel else { return }
-            if menuOpen {
-                self.panelWasVisibleBeforeMenu = panel.isVisible
-                panel.orderOut(nil)
+            if menuShown {
+                // Remember only the first hide, so repeated calls do not forget that the panel was visible.
+                if panel.isVisible {
+                    self.panelWasVisibleBeforeMenu = true
+                    panel.orderOut(nil)
+                }
             } else if self.panelWasVisibleBeforeMenu {
+                self.panelWasVisibleBeforeMenu = false
                 panel.orderFrontRegardless()
             }
         }
@@ -107,7 +118,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Grows or shrinks the panel around its top-left corner, animated, so the drag position stays put.
     private func resizePanel(expanded: Bool) {
         guard let panel else { return }
-        let size = NSSize(width: expanded ? 420 : 360, height: expanded ? 560 : 360)
+        // Remember the size the user had, so leaving the Now Playing layout restores it.
+        if expanded { standardSize = panel.frame.size }
+        let size = expanded ? NSSize(width: 420, height: 560) : standardSize
         var frame = panel.frame
         frame.origin.y += frame.height - size.height
         frame.size = size
@@ -127,13 +140,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let origin = NSPoint(x: area.minX + 24, y: area.maxY - size.height - 24)
         let panel = NSPanel(
             contentRect: NSRect(origin: origin, size: size),
-            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false
         )
         panel.contentView = content
         panel.isOpaque = false
         panel.backgroundColor = .clear
+        panel.minSize = NSSize(width: 300, height: 260)
+        panel.maxSize = NSSize(width: 900, height: 1000)
+        // Restores the size and place the user left it at, and saves them as they change.
+        panel.setFrameAutosaveName("EndLyricsPanel")
         panel.hasShadow = true
         content.wantsLayer = true
         content.layer?.cornerRadius = 14

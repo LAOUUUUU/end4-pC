@@ -19,11 +19,11 @@ struct LyricsView: View {
                 header
                 expandButton
             }
-            if !settings.compactMode {
+            if !settings.compactMode && settings.panelShowsVisualizer {
                 VisualizerView(model: visualizer, theme: theme)
             }
             LyricsStack(model: model, theme: theme, baseFont: 16, compact: settings.compactMode)
-            if !settings.compactMode {
+            if !settings.compactMode && settings.panelShowsControls {
                 ProgressBarView(fraction: model.progress, accent: theme.accent)
                 VolumeSliderView(model: model, theme: theme)
                 PlaybackControlsView(model: model, theme: theme)

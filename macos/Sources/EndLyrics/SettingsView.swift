@@ -89,6 +89,14 @@ struct SettingsView: View {
                 Toggle("Compact: only the current line", isOn: binding(\.compactMode))
             }
 
+            section("Lyric panel") {
+                Toggle("Show the visualizer", isOn: binding(\.panelShowsVisualizer))
+                Toggle("Show progress, volume and controls", isOn: binding(\.panelShowsControls))
+                Text("Drag the panel's edges to resize it. It remembers its size and place.")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+
             section("Background") {
                 slider("Cover blur", value: binding(\.backgroundBlur), range: AppSettings.blurRange, step: 2,
                        label: "\(Int(theme.settings.backgroundBlur)) pt")

@@ -77,6 +77,15 @@ final class FullscreenMenuController {
             close: { [weak window] in window?.close() }
         ))
         window.onClose = { [weak self] in self?.onVisibilityChange?(false) }
+        // The menu is "shown" only while it is the key window and on a visible Space. Otherwise the panel returns.
+        for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification, NSWindow.didChangeOcclusionStateNotification] {
+            NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self, weak window] _ in
+                MainActor.assumeIsolated {
+                    guard let window else { return }
+                    self?.onVisibilityChange?(window.isKeyWindow && window.occlusionState.contains(.visible))
+                }
+            }
+        }
         window.center()
         window.makeKeyAndOrderFront(nil)
         window.toggleFullScreen(nil)

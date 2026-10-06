@@ -44,7 +44,13 @@ Buttons are Material-style, ported from the shell's ripple button: a flash from 
 
 ### Main menu
 
-The full-screen main menu opens when EndLyrics starts. While it is open, the floating lyric panel steps aside and returns when you close the menu. Turn this off under Settings → "Open the main menu when EndLyrics starts". The lyric window is still shown alongside it.
+The lyric panel is editable:
+
+- **Resize** it by dragging its edges (300 × 260 pt at least). It remembers its size and place between launches.
+- **Move** it by dragging any empty part.
+- **Choose what it shows** under Settings → Lyric panel: the visualizer, and the progress bar, volume and controls.
+
+The full-screen main menu opens when EndLyrics starts. While the menu is the focused window, the lyric panel steps aside. It returns as soon as you switch to another app or Space, and steps aside again when you come back to the menu. Turn this off under Settings → "Open the main menu when EndLyrics starts". The lyric window is still shown alongside it.
 
 Lyrics → **Copy All Lyrics** (⌥⌘⇧C) copies the whole song's lyrics to the clipboard, as plain text.
 
