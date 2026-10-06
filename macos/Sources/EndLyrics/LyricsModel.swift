@@ -28,6 +28,12 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var nowPlaying: String?
     /// True while Spotify reports the playing state. The visualizer taps audio only then.
     @Published private(set) var isPlaying = false
+    /// Title and artist of the current track, for file names and the LRC header.
+    @Published private(set) var trackTitle: String?
+    @Published private(set) var trackArtist: String?
+    /// The lyric lines currently loaded, for export.
+    var loadedLines: [LyricLine] { lines }
+
     /// Cover art URL of the current track. Shown only in the Now Playing view, with attribution.
     @Published private(set) var artworkURL: URL?
     /// Link to the current track on Spotify, for the attribution link.
@@ -108,6 +114,8 @@ final class LyricsModel: ObservableObject {
             if TrackChangePolicy.shouldLoad(previous: trackID, next: snapshot.trackID, afterError: afterError) {
                 trackID = snapshot.trackID
                 artworkURL = snapshot.artworkURL
+                trackTitle = snapshot.title
+                trackArtist = snapshot.artist
                 let id = snapshot.trackID.split(separator: ":").last.map(String.init) ?? ""
                 spotifyTrackURL = id.isEmpty ? nil : URL(string: "https://open.spotify.com/track/\(id)")
                 startLoading(snapshot)

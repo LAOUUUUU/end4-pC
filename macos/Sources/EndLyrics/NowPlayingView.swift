@@ -42,5 +42,12 @@ struct NowPlayingView: View {
             VolumeSliderView(model: model, theme: theme)
             PlaybackControlsView(model: model, theme: theme)
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Without a backdrop, the white text sits on whatever is behind the panel and disappears.
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(LinearGradient(colors: theme.backgroundColors, startPoint: .top, endPoint: .bottom))
+        )
     }
 }

@@ -36,6 +36,26 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 11. **Animation.** Lyric lines spring into place and fade as the song moves on. The play/pause icon morphs between its two states. The window keeps a fixed size, so content changes do not make it jump while you drag it.
 8. **Click a line to jump.** Clicking a lyric line moves Spotify to that line's start time. This changes the playback position, so it only happens on a click.
 
+### Main menu
+
+The menu bar has **EndLyrics**, **Playback**, **View**, **Lyrics**, **Window**, and **Help** menus. The app now shows in the Dock so the menu bar appears when it is active.
+
+| Menu | Items |
+|---|---|
+| Playback | Play/Pause (Space), Next (⌘→), Previous (⌘←), Volume Up/Down (⌘↑/⌘↓), Toggle Shuffle (⇧⌘S), Toggle Repeat (⇧⌘R) |
+| View | Show/Hide Lyrics Window (⌘L), Now Playing Layout (⌘E), Compact Mode (⇧⌘C), Mirror Visualizer (⇧⌘M) |
+| Lyrics | Save as .lrc… (⌘S), Save as .txt… (⌥⌘S), Millisecond timestamps, Timing later/earlier (] / [), Reset timing (0), Click a line to jump |
+| Window | Minimize (⌘M), Close Window (⌘W) |
+| Help | Lyric sources, Permissions help, Project on GitHub |
+
+### Saving lyrics
+
+**Lyrics → Save as .lrc…** writes the lyrics currently loaded, with `[ti:]` and `[ar:]` headers and `[mm:ss.cc]` timestamps. Turn on **Millisecond Timestamps** for `[mm:ss.mmm]`. **Save as .txt…** writes the lines without timestamps. The suggested file name is `Artist - Title.lrc`.
+
+### What is not included, and why
+
+The Manzana project (MIT) fetches lyrics from Apple Music with your logged-in `media-user-token` cookie, and makes lyric videos in its paid tiers. Its Apple Music fetch is not in this app: it relies on a private web API that needs your browser session token, and Apple's official lyrics endpoint needs a privileged developer token that cannot be shipped in an app. Lyric videos and word-level sync are sold products.
+
 ### Settings
 
 Open the menu-bar ♪ item and choose **Settings…** (⌘,).
@@ -98,6 +118,7 @@ ENDLYRICS_LIVE_TESTS=1 swift test --filter 'LRCLibLiveTests|SpotifyBridgeLiveTes
 | `Sources/SpotifyKit` | AppleScript bridge, playback parser and controls, Core Audio process tap |
 | `Sources/AudioVisualizer` | FFT spectrum analyzer, mono mixdown, band smoothing, peak caps, resampling |
 | `Sources/Appearance` | Settings model, RGB colours, dominant-colour extraction |
+| `Sources/LyricsCore` (`LyricsExport`) | LRC and TXT writers, safe file names |
 | `Sources/EndLyrics` | SwiftUI lyrics view, model, and the AppKit panel and menu bar item |
 | `Tests/` | Unit tests for each core piece, plus opt-in live tests |
 | `Resources/Info.plist` | Bundle metadata, including the Automation usage string |

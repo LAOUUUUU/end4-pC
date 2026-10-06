@@ -35,9 +35,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var toggleItem: NSMenuItem?
     private var offsetSubscription: AnyCancellable?
     private var expandSubscription: AnyCancellable?
+    private var mainMenu: MainMenuController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
+        // Regular, not accessory, so the main menu bar appears when the app is active.
+        NSApp.setActivationPolicy(.regular)
         makePanel()
         makeStatusItem()
         visualizer.follow(model.$isPlaying)
@@ -46,6 +48,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .map(\.lyricOffset)
             .removeDuplicates()
             .sink { [weak self] offset in self?.model.offsetSeconds = offset }
+        let menu = MainMenuController(
+            model: model,
+            theme: theme,
+            showSettings: { [weak self] in self?.showSettings() },
+            togglePanel: { [weak self] in self?.togglePanel() }
+        )
+        menu.install()
+        mainMenu = menu
         model.start()
         expandSubscription = model.$expanded.dropFirst().sink { [weak self] expanded in
             self?.resizePanel(expanded: expanded)
