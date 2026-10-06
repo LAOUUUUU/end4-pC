@@ -135,13 +135,15 @@ struct LyricsStack: View {
         let text = model.lineText(at: index)
         let display = text.isEmpty ? "♪" : text
 
+        // Every row uses the same font and weight. Only the scale and opacity change with distance,
+        // so a line that is moving does not also change its size or width in the same moment.
         return Group {
             if isActive, !model.activeWords.isEmpty {
                 KaraokeLine(text: display, progress: model.lineProgress, accent: theme.accent)
-                    .font(.system(size: font, weight: .semibold))
+                    .font(.system(size: font))
             } else {
                 Text(display)
-                    .font(.system(size: size(distance: level)))
+                    .font(.system(size: font))
                     .foregroundStyle(.white)
             }
         }
@@ -150,7 +152,7 @@ struct LyricsStack: View {
         .lineLimit(1)
         .minimumScaleFactor(0.45)
         .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
-        .scaleEffect(isActive ? 1 : 0.96, anchor: .leading)
+        .scaleEffect(scale(distance: level), anchor: .leading)
         // Rows sit one slot apart, the active line in the middle slot (slot 3 of 0...6).
         .offset(y: CGFloat(compact ? 0 : distance + 3) * rowHeight)
         .contentShape(Rectangle())
@@ -169,12 +171,12 @@ struct LyricsStack: View {
             .multilineTextAlignment(.center)
     }
 
-    /// Active line at `font`, then 0.94× and 0.75× for the next lines, 0.6× beyond.
-    private func size(distance: Int) -> CGFloat {
+    /// Active line full size, then 0.94× and 0.75× for the next lines. Animated with the slide.
+    private func scale(distance: Int) -> CGFloat {
         switch distance {
-        case 0: return font
-        case 1: return font * 0.94
-        default: return font * 0.75
+        case 0: return 1
+        case 1: return 0.94
+        default: return 0.75
         }
     }
 
