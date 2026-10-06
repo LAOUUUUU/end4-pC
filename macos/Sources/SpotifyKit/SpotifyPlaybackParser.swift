@@ -19,6 +19,8 @@ public struct PlaybackSnapshot: Equatable, Sendable {
     public let state: SpotifyPlayerState
     /// Cover art URL from Spotify's CDN. Used for colours only; the art itself is not shown.
     public let artworkURL: URL?
+    public let shuffling: Bool
+    public let repeating: Bool
 
     public init(
         trackID: String,
@@ -28,7 +30,9 @@ public struct PlaybackSnapshot: Equatable, Sendable {
         duration: Double,
         position: Double,
         state: SpotifyPlayerState,
-        artworkURL: URL? = nil
+        artworkURL: URL? = nil,
+        shuffling: Bool = false,
+        repeating: Bool = false
     ) {
         self.trackID = trackID
         self.title = title
@@ -38,6 +42,8 @@ public struct PlaybackSnapshot: Equatable, Sendable {
         self.position = position
         self.state = state
         self.artworkURL = artworkURL
+        self.shuffling = shuffling
+        self.repeating = repeating
     }
 }
 
@@ -51,7 +57,7 @@ public enum SpotifyPlaybackParser {
         guard !line.isEmpty else { return nil }
 
         let fields = line.components(separatedBy: separator)
-        guard fields.count == 8 else { return nil }
+        guard fields.count == 10 else { return nil }
 
         let title = fields[1]
         // No current track (for example during an ad) has no title; there is nothing to look up.
@@ -72,7 +78,9 @@ public enum SpotifyPlaybackParser {
             duration: durationMs / 1000,
             position: position,
             state: state,
-            artworkURL: fields[7].isEmpty ? nil : URL(string: fields[7])
+            artworkURL: fields[7].isEmpty ? nil : URL(string: fields[7]),
+            shuffling: fields[8] == "true",
+            repeating: fields[9] == "true"
         )
     }
 }

@@ -12,9 +12,11 @@ final class SpotifyPlaybackParserTests: XCTestCase {
         duration: String = "200040",
         position: String = "12.5",
         state: String = "playing",
-        artwork: String = "https://i.scdn.co/image/ab67616d0000b273"
+        artwork: String = "https://i.scdn.co/image/ab67616d0000b273",
+        shuffling: String = "false",
+        repeating: String = "true"
     ) -> String {
-        [id, title, artist, album, duration, position, state, artwork].joined(separator: sep)
+        [id, title, artist, album, duration, position, state, artwork, shuffling, repeating].joined(separator: sep)
     }
 
     func testParsesPlayingTrack() throws {
@@ -63,10 +65,17 @@ final class SpotifyPlaybackParserTests: XCTestCase {
         XCTAssertNil(snapshot.artworkURL)
     }
 
-    func testSevenFieldOutputFromOlderScriptIsRejected() {
-        let sevenFields = ["id", "title", "artist", "album", "1000", "1", "playing"].joined(separator: sep)
+    func testParsesShuffleAndRepeatFlags() throws {
+        let snapshot = try XCTUnwrap(SpotifyPlaybackParser.parse(line(shuffling: "true", repeating: "false")))
 
-        XCTAssertNil(SpotifyPlaybackParser.parse(sevenFields))
+        XCTAssertTrue(snapshot.shuffling)
+        XCTAssertFalse(snapshot.repeating)
+    }
+
+    func testEightFieldOutputFromOlderScriptIsRejected() {
+        let eightFields = ["id", "title", "artist", "album", "1000", "1", "playing", "https://x"].joined(separator: sep)
+
+        XCTAssertNil(SpotifyPlaybackParser.parse(eightFields))
     }
 
     func testUnknownStateReturnsNil() {

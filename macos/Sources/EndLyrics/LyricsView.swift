@@ -41,7 +41,8 @@ struct LyricsView: View {
                 message("Can't read Spotify. Allow control under Privacy & Security > Automation.\n\(detail)")
             }
             if !settings.compactMode {
-                PlaybackControlsView()
+                ProgressBarView(fraction: model.progress, accent: theme.accent)
+                PlaybackControlsView(model: model, theme: theme)
             }
         }
         .padding(16)

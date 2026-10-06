@@ -29,7 +29,7 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 3. **Display.** Between polls, a local clock estimates the position so the active line advances smoothly. The window shows seven lines: the active line in the middle, three before it, and three after it. Sizes and opacities match the shell's lyrics widget.
 4. **Karaoke highlight.** The active line is highlighted word by word. LRCLIB gives timestamps only per line, so each line's time is shared across its words by length. This is an estimate, not measured word timing.
 5. **Visualizer.** A Core Audio process tap captures only Spotify's audio (the tap is unmuted, so playback is not affected). It is active only while Spotify is playing. The audio is split into 24 log-spaced bands with an FFT.
-6. **Playback buttons.** Previous, play/pause, and next send one AppleScript command each. Each one checks that Spotify is running first, so a click never launches it.
+6. **Playback buttons.** Shuffle, previous, play/pause, next, and repeat. Each sends one AppleScript command and checks that Spotify is running first, so a click never launches it. Shuffle and repeat show their current state from Spotify, in the accent colour. A thin bar under the title shows how far through the track playback is.
 7. **Album colours.** The track's cover URL comes from Spotify's AppleScript. The app downloads the cover, shrinks it to 32×32, and picks its most vivid colours. The cover is never shown. The colours tint the bars, the sung words, and the window background. If the cover has no vivid colour (for example, black and white), the default cyan is used.
 8. **Click a line to jump.** Clicking a lyric line moves Spotify to that line's start time. This changes the playback position, so it only happens on a click.
 
@@ -39,6 +39,7 @@ Open the menu-bar ♪ item and choose **Settings…** (⌘,).
 
 | Setting | What it does |
 |---|---|
+| Style | **Bars** (rising from the bottom) or **Mirror** (the same bars reflected around the centre). |
 | Bars | 12, 16, 24, or 32 bars. The analyser always works in 32 bands and averages them down. |
 | Show peak caps | Shows or hides the falling caps above the bars. |
 | Take colours from | **Album cover** (default) or **A solid colour**, which you pick. |

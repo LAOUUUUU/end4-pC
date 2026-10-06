@@ -5,7 +5,7 @@ final class SpotifyBridgeTests: XCTestCase {
     private let sep = "\u{1F}"
 
     func testSuccessfulRunWithTrackReturnsSnapshot() throws {
-        let stdout = ["spotify:track:x", "Song", "Artist", "Album", "180000", "10", "playing", "https://i.scdn.co/image/x"]
+        let stdout = ["spotify:track:x", "Song", "Artist", "Album", "180000", "10", "playing", "https://i.scdn.co/image/x", "false", "false"]
             .joined(separator: sep) + "\n"
 
         let result = SpotifyBridge.interpret(exitCode: 0, stdout: stdout, stderr: "")

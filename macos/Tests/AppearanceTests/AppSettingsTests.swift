@@ -44,3 +44,18 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(decoded, settings)
     }
 }
+
+final class VisualizerStyleSettingTests: XCTestCase {
+    func testDefaultStyleIsBars() {
+        XCTAssertEqual(AppSettings().style, .bars)
+    }
+
+    func testMirrorStyleSurvivesJSON() throws {
+        var settings = AppSettings()
+        settings.style = .mirror
+
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+
+        XCTAssertEqual(decoded.style, .mirror)
+    }
+}

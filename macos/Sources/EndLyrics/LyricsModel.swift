@@ -1,4 +1,5 @@
 import Foundation
+import Appearance
 import LyricsCore
 import SpotifyKit
 
@@ -31,6 +32,12 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var artworkURL: URL?
     /// Seconds added to the playback position when choosing the lyric line (from settings).
     var offsetSeconds = 0.0
+    /// Playback state from Spotify, shown on the shuffle and repeat buttons.
+    @Published private(set) var shuffling = false
+    @Published private(set) var repeating = false
+    /// 0...1 through the current track, updated while it plays.
+    @Published private(set) var progress = 0.0
+    private var trackDuration = 0.0
     @Published private(set) var slots: [String] = Array(repeating: "", count: LyricsTimeline.total)
     @Published private(set) var activeIndex = -1
     /// Estimated word timing for the active line, for the karaoke highlight.
@@ -86,6 +93,9 @@ final class LyricsModel: ObservableObject {
         case .success(let snapshot?):
             nowPlaying = "\(snapshot.title) — \(snapshot.artist)"
             isPlaying = snapshot.state == .playing
+            shuffling = snapshot.shuffling
+            repeating = snapshot.repeating
+            trackDuration = snapshot.duration
             clock.resync(position: snapshot.position, playing: snapshot.state == .playing, at: Date())
             let afterError = status.isError
             if TrackChangePolicy.shouldLoad(previous: trackID, next: snapshot.trackID, afterError: afterError) {
@@ -134,8 +144,22 @@ final class LyricsModel: ObservableObject {
         let position = clock.position(at: Date()) + Self.leadSeconds + offsetSeconds
         let index = LyricsTimeline.activeIndex(at: position, in: lines)
         if index != activeIndex { setActive(index) }
+        let fraction = PlaybackProgress.fraction(position: clock.position(at: Date()), duration: trackDuration)
+        if abs(fraction - progress) > 0.002 { progress = fraction }
         let word = WordTiming.activeWordIndex(in: activeWords, at: position)
         if word != highlightedWord { highlightedWord = word }
+    }
+
+    func toggleShuffle() {
+        shuffling.toggle()
+        let on = shuffling
+        Task { await SpotifyToggle.send(SpotifyToggle.shuffle(on: on)) }
+    }
+
+    func toggleRepeat() {
+        repeating.toggle()
+        let on = repeating
+        Task { await SpotifyToggle.send(SpotifyToggle.repeating(on: on)) }
     }
 
     /// Jumps Spotify to the start of the lyric line shown in `slot` (0...6).

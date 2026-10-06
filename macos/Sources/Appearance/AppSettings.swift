@@ -8,12 +8,21 @@ public enum ColorSource: String, Codable, CaseIterable, Sendable {
     case solid
 }
 
+/// How the bars are drawn.
+public enum VisualizerStyle: String, Codable, CaseIterable, Sendable {
+    /// Bars rising from the bottom, low frequencies on the left.
+    case bars
+    /// The same bars reflected around the centre.
+    case mirror
+}
+
 /// User choices for the window. Stored as JSON in UserDefaults.
 public struct AppSettings: Codable, Equatable, Sendable {
     public static let barCountChoices = [12, 16, 24, 32]
     public static let offsetRange: ClosedRange<Double> = -3...3
 
     public var barCount = 24
+    public var style: VisualizerStyle = .bars
     public var showPeakCaps = true
     public var colorSource: ColorSource = .album
     public var solidColor = RGB(red: 0.2, green: 0.9, blue: 1.0)

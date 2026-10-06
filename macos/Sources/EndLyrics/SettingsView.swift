@@ -8,6 +8,11 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Visualizer") {
+                Picker("Style", selection: binding(\.style)) {
+                    Text("Bars").tag(VisualizerStyle.bars)
+                    Text("Mirror").tag(VisualizerStyle.mirror)
+                }
+                .pickerStyle(.segmented)
                 Picker("Bars", selection: binding(\.barCount)) {
                     ForEach(AppSettings.barCountChoices, id: \.self) { count in
                         Text("\(count)").tag(count)

@@ -1,5 +1,5 @@
-import AudioVisualizer
 import Appearance
+import AudioVisualizer
 import SpotifyKit
 import SwiftUI
 
@@ -13,9 +13,13 @@ struct VisualizerView: View {
 
     var body: some View {
         let settings = theme.settings
-        let levels = BandResampler.resample(model.bands, to: settings.barCount)
-        let peaks = BandResampler.resample(model.peaks, to: settings.barCount)
-        let barWidth: CGFloat = settings.barCount > 24 ? 3 : 4
+        let mirror = settings.style == .mirror
+        let count = mirror ? settings.barCount * 2 : settings.barCount
+        let resampledLevels = BandResampler.resample(model.bands, to: settings.barCount)
+        let resampledPeaks = BandResampler.resample(model.peaks, to: settings.barCount)
+        let levels = mirror ? BandLayout.mirrored(resampledLevels) : resampledLevels
+        let peaks = mirror ? BandLayout.mirrored(resampledPeaks) : resampledPeaks
+        let barWidth: CGFloat = count > 24 ? 3 : 4
         let fill = LinearGradient(
             colors: [theme.accent.opacity(0.9), .white.opacity(0.9)],
             startPoint: .bottom,
@@ -44,13 +48,19 @@ struct VisualizerView: View {
     }
 }
 
-/// Previous, play/pause, next. Each button sends one command to Spotify, and only when it is running.
+/// Shuffle, previous, play/pause, next, repeat. Each button sends one command to Spotify,
+/// and only when it is running. Shuffle and repeat show their current state in the accent colour.
 struct PlaybackControlsView: View {
+    @ObservedObject var model: LyricsModel
+    @ObservedObject var theme: ThemeModel
+
     var body: some View {
-        HStack(spacing: 22) {
+        HStack(spacing: 18) {
+            toggle("shuffle", on: model.shuffling) { model.toggleShuffle() }
             control("backward.fill", .previous)
             control("playpause.fill", .playPause)
             control("forward.fill", .next)
+            toggle("repeat", on: model.repeating) { model.toggleRepeat() }
         }
         .frame(maxWidth: .infinity)
     }
@@ -62,9 +72,37 @@ struct PlaybackControlsView: View {
             Image(systemName: symbol)
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.9))
-                .frame(width: 28, height: 24)
+                .frame(width: 26, height: 24)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private func toggle(_ symbol: String, on: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(on ? theme.accent : .white.opacity(0.45))
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Thin bar showing how far through the track playback is.
+struct ProgressBarView: View {
+    let fraction: Double
+    let accent: Color
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(.white.opacity(0.15))
+                Capsule().fill(accent)
+                    .frame(width: geometry.size.width * fraction)
+            }
+        }
+        .frame(height: 3)
     }
 }
