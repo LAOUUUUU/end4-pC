@@ -97,7 +97,10 @@ final class LyricsModel: ObservableObject {
 
     private func poll() async {
         defer { if source != router.source { source = router.source } }
-        switch await router.read() {
+        let requestedAt = Date()
+        let result = await router.read()
+        let latency = Date().timeIntervalSince(requestedAt)
+        switch result {
         case .failure(let error):
             if case .scriptFailed(let message) = error {
                 status = .error(message)
@@ -118,7 +121,7 @@ final class LyricsModel: ObservableObject {
             repeating = snapshot.repeating
             if !volumeEditing { volume = Double(snapshot.volume) }
             trackDuration = snapshot.duration
-            clock.resync(position: snapshot.position, playing: snapshot.state == .playing, at: Date())
+            clock.resync(position: snapshot.position, playing: snapshot.state == .playing, at: Date(), latency: latency)
             let afterError = status.isError
             if TrackChangePolicy.shouldLoad(previous: trackID, next: snapshot.trackID, afterError: afterError) {
                 trackID = snapshot.trackID

@@ -107,16 +107,14 @@ struct LyricsStack: View {
                 if index == LyricsTimeline.before, !model.activeWords.isEmpty {
                     KaraokeLine(text: text, progress: model.lineProgress, accent: theme.accent)
                         .font(.system(size: font, weight: .semibold))
-                        .transition(.opacity.combined(with: .scale(scale: 0.94, anchor: .leading)))
                 } else {
                     Text(text)
                         .font(.system(size: size(distance: distance)))
                         .opacity(opacity(distance: distance))
                         .foregroundStyle(.white)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        .contentTransition(.opacity)
                 }
             }
-            .id("\(index)-\(text)")
             .lineLimit(2)
             .scaleEffect(distance == 0 ? 1 : 0.96, anchor: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)

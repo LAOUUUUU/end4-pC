@@ -28,3 +28,37 @@ final class PositionClockTests: XCTestCase {
         XCTAssertEqual(clock.position(at: start.addingTimeInterval(5)), 14, accuracy: 0.0001)
     }
 }
+
+final class PositionClockLatencyTests: XCTestCase {
+    func testReportedPositionIsAdvancedByHalfTheRoundTrip() {
+        var clock = PositionClock()
+        let now = Date(timeIntervalSince1970: 1_000)
+        // Spotify said 10 s, the reply took 0.4 s, so the position is about 10.2 s when it arrived.
+        clock.resync(position: 10, playing: true, at: now, latency: 0.4)
+
+        XCTAssertEqual(clock.position(at: now), 10.2, accuracy: 0.001)
+    }
+
+    func testSmallCorrectionsDoNotSnapTheLyrics() {
+        var clock = PositionClock()
+        let start = Date(timeIntervalSince1970: 1_000)
+        clock.resync(position: 12, playing: true, at: start, latency: 0)
+
+        // A poll reports 12.1 s when the clock predicts 12.0 s: jitter, so keep the prediction.
+        let later = start.addingTimeInterval(0)
+        clock.resync(position: 12.1, playing: true, at: later, latency: 0)
+
+        XCTAssertEqual(clock.position(at: later), 12.0, accuracy: 0.001)
+    }
+
+    func testLargeDriftStillCorrects() {
+        var clock = PositionClock()
+        let start = Date(timeIntervalSince1970: 1_000)
+        clock.resync(position: 12, playing: true, at: start, latency: 0)
+
+        // Spotify reports 14 s when the clock predicts 12 s: real drift, so jump to it.
+        clock.resync(position: 14, playing: true, at: start, latency: 0)
+
+        XCTAssertEqual(clock.position(at: start), 14, accuracy: 0.001)
+    }
+}
