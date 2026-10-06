@@ -60,27 +60,48 @@ struct NowPlayingView: View {
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Without a backdrop, the white text sits on whatever is behind the panel and disappears.
-        .background(CoverBackdrop(url: model.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur))
+        .background(CoverBackdrop(url: model.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath))
     }
 }
 
-/// The window background: the cover blurred behind a gradient of its colours.
+/// The window background: a custom image if one is set, otherwise the cover, blurred behind a gradient.
 /// The cover is only used as a blurred backdrop, so it cannot be read off the panel.
 struct CoverBackdrop: View {
     let url: URL?
     let colors: [Color]
     var blur: Double = 40
+    var imagePath: String?
 
     var body: some View {
         ZStack {
-            AsyncImage(url: url) { image in
-                image.resizable().scaledToFill().blur(radius: blur).opacity(0.5)
-            } placeholder: {
-                Color.clear
+            if let imagePath, let image = BackgroundImageCache.image(at: imagePath) {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .blur(radius: blur)
+                    .opacity(0.6)
+            } else {
+                AsyncImage(url: url) { image in
+                    image.resizable().scaledToFill().blur(radius: blur).opacity(0.5)
+                } placeholder: {
+                    Color.clear
+                }
             }
             RoundedRectangle(cornerRadius: 14)
                 .fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom))
         }
         .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+/// Decoded background images, so a redraw does not decode the file again.
+enum BackgroundImageCache {
+    private static let cache = NSCache<NSString, NSImage>()
+
+    static func image(at path: String) -> NSImage? {
+        if let cached = cache.object(forKey: path as NSString) { return cached }
+        guard let image = NSImage(contentsOfFile: path) else { return nil }
+        cache.setObject(image, forKey: path as NSString)
+        return image
     }
 }

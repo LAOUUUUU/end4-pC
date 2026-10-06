@@ -76,7 +76,13 @@ The window follows **Spotify**, **Apple Music**, or **whichever is playing** (Se
 
 Settings is a page inside the full-screen main menu. Open it from ♪ or ⌘, and switch between **Home** and **Settings** at the top. There are no separate windows.
 
-The lyric size and the cover blur are settings too. **Copy Current Lyric** (⌥⌘C) copies the line being sung.
+The lyric size and the cover blur are settings too.
+
+- **Colour presets.** Six one-tap accents: Cyan, Rose, Amber, Mint, Violet, and Mono. Picking one switches the accent to a solid colour.
+- **Background image.** Choose your own picture for the background, or go back to the cover.
+- **Track notifications.** A notification when the track changes. Off by default. macOS asks for permission the first time.
+- **Open at login.** Starts EndLyrics when you log in. macOS may only allow this once the app is in `/Applications`.
+ **Copy Current Lyric** (⌥⌘C) copies the line being sung.
 
 | Setting | What it does |
 |---|---|

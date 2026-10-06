@@ -20,7 +20,7 @@ struct FullscreenMenuView: View {
             let lyricSize = min(30, max(16, geometry.size.height / 24))
 
             ZStack(alignment: .topTrailing) {
-                CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors)
+                CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath)
                     .ignoresSafeArea()
 
                 Group {

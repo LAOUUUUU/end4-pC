@@ -53,8 +53,37 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var lyricScale = 1.0
     /// Blur radius of the cover behind the window.
     public var backgroundBlur = 40.0
+    /// File path of a custom background image. When set, it replaces the cover behind the window.
+    public var backgroundImagePath: String?
+    /// Post a notification when the track changes.
+    public var notifyOnTrackChange = false
 
     public init() {}
+
+    /// Every key is optional when decoding, so settings saved by an older version keep their values
+    /// and missing keys take the defaults. Without this, one missing key would reset every setting.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: Keys.self)
+        let defaults = AppSettings()
+        barCount = try c.decodeIfPresent(Int.self, forKey: .barCount) ?? defaults.barCount
+        style = try c.decodeIfPresent(VisualizerStyle.self, forKey: .style) ?? defaults.style
+        showPeakCaps = try c.decodeIfPresent(Bool.self, forKey: .showPeakCaps) ?? defaults.showPeakCaps
+        colorSource = try c.decodeIfPresent(ColorSource.self, forKey: .colorSource) ?? defaults.colorSource
+        solidColor = try c.decodeIfPresent(RGB.self, forKey: .solidColor) ?? defaults.solidColor
+        lyricOffset = try c.decodeIfPresent(Double.self, forKey: .lyricOffset) ?? defaults.lyricOffset
+        compactMode = try c.decodeIfPresent(Bool.self, forKey: .compactMode) ?? defaults.compactMode
+        clickToSeek = try c.decodeIfPresent(Bool.self, forKey: .clickToSeek) ?? defaults.clickToSeek
+        lyricScale = try c.decodeIfPresent(Double.self, forKey: .lyricScale) ?? defaults.lyricScale
+        backgroundBlur = try c.decodeIfPresent(Double.self, forKey: .backgroundBlur) ?? defaults.backgroundBlur
+        backgroundImagePath = try c.decodeIfPresent(String.self, forKey: .backgroundImagePath)
+        notifyOnTrackChange = try c.decodeIfPresent(Bool.self, forKey: .notifyOnTrackChange) ?? defaults.notifyOnTrackChange
+        player = try c.decodeIfPresent(PlayerChoice.self, forKey: .player) ?? defaults.player
+    }
+
+    private enum Keys: String, CodingKey {
+        case barCount, style, showPeakCaps, colorSource, solidColor, lyricOffset, compactMode
+        case clickToSeek, lyricScale, backgroundBlur, backgroundImagePath, notifyOnTrackChange, player
+    }
 
     /// The same settings with out-of-range values pulled back into the allowed set.
     public func normalized() -> AppSettings {

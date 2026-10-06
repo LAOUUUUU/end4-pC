@@ -1,9 +1,12 @@
+import AppKit
 import Appearance
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Settings as a page inside the full-screen menu: visualizer, colours, lyrics, the background and the player.
 struct SettingsView: View {
     @ObservedObject var theme: ThemeModel
+    @State private var launchAtLogin = LaunchAtLogin.isEnabled
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -38,11 +41,42 @@ struct SettingsView: View {
                     Text("A solid colour").tag(ColorSource.solid)
                 }
                 .pickerStyle(.segmented)
+                HStack(spacing: 10) {
+                    ForEach(ColorPreset.all, id: \.name) { preset in
+                        Button {
+                            var settings = theme.settings
+                            preset.apply(to: &settings)
+                            theme.settings = settings
+                        } label: {
+                            Circle()
+                                .fill(Color(rgb: preset.accent))
+                                .frame(width: 22, height: 22)
+                                .overlay(Circle().stroke(.white.opacity(0.5), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .help(preset.name)
+                    }
+                }
                 ColorPicker("Solid colour", selection: solidColor)
                     .disabled(theme.settings.colorSource == .album)
                 Text("Album colours come from the cover of the track that is playing.")
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.55))
+            }
+
+            section("Notifications and startup") {
+                Toggle("Notify when the track changes", isOn: binding(\.notifyOnTrackChange))
+                Toggle("Open EndLyrics at login", isOn: Binding(
+                    get: { launchAtLogin },
+                    set: { value in
+                        do {
+                            try LaunchAtLogin.set(value)
+                        } catch {
+                            NSSound.beep()
+                        }
+                        launchAtLogin = LaunchAtLogin.isEnabled
+                    }
+                ))
             }
 
             section("Lyrics") {
@@ -57,6 +91,14 @@ struct SettingsView: View {
             section("Background") {
                 slider("Cover blur", value: binding(\.backgroundBlur), range: AppSettings.blurRange, step: 2,
                        label: "\(Int(theme.settings.backgroundBlur)) pt")
+                HStack {
+                    Button("Choose image…", action: chooseBackgroundImage)
+                    if theme.settings.backgroundImagePath != nil {
+                        Button("Use the cover") { theme.settings.backgroundImagePath = nil }
+                    }
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 12, weight: .medium))
             }
         }
         .foregroundStyle(.white)
@@ -95,6 +137,16 @@ struct SettingsView: View {
         case .radial: return "Radial"
         case .blocks: return "LED blocks"
         }
+    }
+
+    /// Opens a file picker for an image and uses it as the background.
+    private func chooseBackgroundImage() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        theme.settings.backgroundImagePath = url.path
     }
 
     private func binding<Value>(_ keyPath: WritableKeyPath<AppSettings, Value>) -> Binding<Value> {

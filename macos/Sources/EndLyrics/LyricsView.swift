@@ -62,7 +62,7 @@ struct LyricsView: View {
 
     /// The cover, blurred, behind a gradient of its colours.
     private var backdrop: some View {
-        CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur)
+        CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath)
     }
 }
 

@@ -74,6 +74,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         fullscreenMenu = fullscreen
         menu.openFullscreen = { fullscreen.show() }
         menu.openSettings = { fullscreen.show(page: .settings) }
+        let notifier = TrackNotifier()
+        var lastAnnounced: String?
+        model.onTrackChanged = { [weak self] id, title, artist in
+            guard let self else { return }
+            let enabled = self.theme.settings.notifyOnTrackChange
+            if TrackAnnouncer.shouldAnnounce(previous: lastAnnounced, next: id, enabled: enabled) {
+                notifier.post(title: title, artist: artist)
+            }
+            lastAnnounced = id
+        }
         model.start()
         expandSubscription = model.$expanded.dropFirst().sink { [weak self] expanded in
             self?.resizePanel(expanded: expanded)

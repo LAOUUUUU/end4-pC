@@ -40,6 +40,8 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var artworkURL: URL?
     /// Link to the current track on Spotify, for the attribution link.
     @Published private(set) var spotifyTrackURL: URL?
+    /// Called when a new track starts: track id, title and artist.
+    var onTrackChanged: ((String, String, String) -> Void)?
     /// Seconds added to the playback position when choosing the lyric line (from settings).
     var offsetSeconds = 0.0
     /// Playback state from Spotify, shown on the shuffle and repeat buttons.
@@ -121,6 +123,7 @@ final class LyricsModel: ObservableObject {
                 artworkURL = snapshot.artworkURL
                 trackTitle = snapshot.title
                 trackArtist = snapshot.artist
+                onTrackChanged?(snapshot.trackID, snapshot.title, snapshot.artist)
                 let id = snapshot.trackID.split(separator: ":").last.map(String.init) ?? ""
                 spotifyTrackURL = id.isEmpty ? nil : URL(string: "https://open.spotify.com/track/\(id)")
                 startLoading(snapshot)
