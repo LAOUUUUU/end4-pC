@@ -66,23 +66,25 @@ struct LyricsView: View {
     }
 }
 
-/// The seven visible lines, or the status message in their place. Line changes animate.
+/// The lyrics as a scrolling column: the active line sits in the middle, and the lines above and
+/// below slide up or down on a spring as the song moves on. Each line keeps its place in the song,
+/// so it moves instead of being swapped out. Status messages replace the column when there are no lines.
 struct LyricsStack: View {
     @ObservedObject var model: LyricsModel
     @ObservedObject var theme: ThemeModel
-    /// Font size of the active line, before the lyric-size setting. The other lines scale from it.
+    /// Font size of the active line, before the lyric-size setting.
     let baseFont: CGFloat
     var compact = false
 
     private var font: CGFloat { baseFont * CGFloat(theme.settings.lyricScale) }
+    /// Height of one line slot. Taller than the text so wrapped lines and the sweep have room.
+    private var rowHeight: CGFloat { font * 1.5 }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        Group {
             switch model.status {
             case .synced:
-                ForEach(Array(model.slots.enumerated()), id: \.offset) { index, text in
-                    lyricLine(index: index, text: text)
-                }
+                scroller
             case .loading:
                 ProgressView()
                     .controlSize(.regular)
@@ -95,34 +97,57 @@ struct LyricsStack: View {
                 message("Can't read Spotify. Allow control under Privacy & Security > Automation.\n\(detail)")
             }
         }
-        .animation(.spring(response: 0.45, dampingFraction: 0.85), value: model.activeIndex)
+        .animation(.spring(response: 0.5, dampingFraction: 0.86), value: model.activeIndex)
         .animation(.linear(duration: 0.12), value: model.lineProgress)
     }
 
+    /// Only the lines near the active one are laid out. Each sits at its distance from the active line.
     @ViewBuilder
-    private func lyricLine(index: Int, text: String) -> some View {
-        let distance = abs(index - LyricsTimeline.before)
-        if !compact || distance == 0 {
-            Group {
-                if index == LyricsTimeline.before, !model.activeWords.isEmpty {
-                    KaraokeLine(text: text, progress: model.lineProgress, accent: theme.accent)
-                        .font(.system(size: font, weight: .semibold))
-                } else {
-                    Text(text)
-                        .font(.system(size: size(distance: distance)))
-                        .opacity(opacity(distance: distance))
-                        .foregroundStyle(.white)
-                        .contentTransition(.opacity)
+    private var scroller: some View {
+        let active = model.activeIndex
+        if active >= 0, model.lineCount > 0 {
+            let first = max(0, active - 4)
+            let last = min(model.lineCount - 1, active + 4)
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(first...max(first, last)), id: \.self) { index in
+                    row(index: index, active: active)
                 }
             }
-            .lineLimit(2)
-            .scaleEffect(distance == 0 ? 1 : 0.96, anchor: .leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if theme.settings.clickToSeek, !text.isEmpty {
-                    model.seek(toSlot: index)
-                }
+            .frame(maxWidth: .infinity, minHeight: rowHeight * (compact ? 1 : 7), alignment: .topLeading)
+            .clipped()
+        } else {
+            Color.clear
+        }
+    }
+
+    private func row(index: Int, active: Int) -> some View {
+        let distance = index - active
+        let level = abs(distance)
+        let isActive = distance == 0
+        let visible = compact ? isActive : level <= 3
+        let text = model.lineText(at: index)
+        let display = text.isEmpty ? "♪" : text
+
+        return Group {
+            if isActive, !model.activeWords.isEmpty {
+                KaraokeLine(text: display, progress: model.lineProgress, accent: theme.accent)
+                    .font(.system(size: font, weight: .semibold))
+            } else {
+                Text(display)
+                    .font(.system(size: size(distance: level)))
+                    .foregroundStyle(.white)
+            }
+        }
+        .opacity(visible ? opacity(distance: level) : 0)
+        .lineLimit(2)
+        .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
+        .scaleEffect(isActive ? 1 : 0.96, anchor: .leading)
+        // Rows sit one slot apart, the active line in the middle slot (slot 3 of 0...6).
+        .offset(y: CGFloat(compact ? 0 : distance + 3) * rowHeight)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if theme.settings.clickToSeek, !text.isEmpty {
+                model.seek(toLine: index)
             }
         }
     }
@@ -135,7 +160,7 @@ struct LyricsStack: View {
             .multilineTextAlignment(.center)
     }
 
-    /// Active line at `font`, then 0.94× and 0.75× for the next lines, 0.6× beyond. The standard panel's 16/15/12 pt.
+    /// Active line at `font`, then 0.94× and 0.75× for the next lines, 0.6× beyond.
     private func size(distance: Int) -> CGFloat {
         switch distance {
         case 0: return font

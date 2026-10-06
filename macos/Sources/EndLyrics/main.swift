@@ -18,7 +18,7 @@ struct PanelRoot: View {
             }
         }
         .padding(0)
-        .frame(width: model.expanded ? 420 : 360, height: model.expanded ? 560 : 330, alignment: .topLeading)
+        .frame(width: model.expanded ? 420 : 360, height: model.expanded ? 560 : 360, alignment: .topLeading)
         .animation(.easeInOut(duration: 0.3), value: model.expanded)
     }
 }
@@ -93,7 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Grows or shrinks the panel around its top-left corner, animated, so the drag position stays put.
     private func resizePanel(expanded: Bool) {
         guard let panel else { return }
-        let size = NSSize(width: expanded ? 420 : 360, height: expanded ? 560 : 330)
+        let size = NSSize(width: expanded ? 420 : 360, height: expanded ? 560 : 360)
         var frame = panel.frame
         frame.origin.y += frame.height - size.height
         frame.size = size
@@ -109,7 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         content.sizingOptions = []
         // Top-left of the main screen, just below the menu bar, so it is easy to find.
         let area = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
-        let size = NSSize(width: 360, height: 330)
+        let size = NSSize(width: 360, height: 360)
         let origin = NSPoint(x: area.minX + 24, y: area.maxY - size.height - 24)
         let panel = NSPanel(
             contentRect: NSRect(origin: origin, size: size),

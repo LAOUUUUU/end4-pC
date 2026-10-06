@@ -227,6 +227,22 @@ final class LyricsModel: ObservableObject {
         Task { await router.setRepeat(on) }
     }
 
+    /// Number of lines in the loaded lyrics.
+    var lineCount: Int { lines.count }
+
+    /// Text of the line at `index` in the whole song, or "" when out of range.
+    func lineText(at index: Int) -> String {
+        lines.indices.contains(index) ? lines[index].text : ""
+    }
+
+    /// Jumps Spotify to the start of the line at `index` in the whole song.
+    func seek(toLine index: Int) {
+        guard lines.indices.contains(index) else { return }
+        let time = lines[index].time
+        clock.resync(position: time, playing: isPlaying, at: Date())
+        Task { await router.seek(to: time) }
+    }
+
     /// Jumps Spotify to the start of the lyric line shown in `slot` (0...6).
     func seek(toSlot slot: Int) {
         let index = activeIndex - LyricsTimeline.before + slot
