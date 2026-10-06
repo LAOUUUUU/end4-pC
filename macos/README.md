@@ -53,6 +53,7 @@ ENDLYRICS_LIVE_TESTS=1 swift test --filter LRCLibLiveTests
 ## Differences from the shell widget
 
 - **Colors.** The shell derives its colors from the wallpaper. This app uses a fixed dark style.
+- **Backdrop and position.** The shell widget sits directly on the wallpaper. This app puts the lyrics on a dark rounded backdrop so they stay readable, and opens the panel at the top-left of the main screen, below the menu bar.
 - **Cover art and track info.** Not shown. Spotify's developer policy has rules about showing its content next to other content, and the policy's application to this kind of app is unresolved.
 - **Empty track name.** The Python lookup treated an empty name as matching every title. This version rejects it.
 - **Before the first line.** Every slot is blank. The shell's version shows the first lines in the bottom slots.
