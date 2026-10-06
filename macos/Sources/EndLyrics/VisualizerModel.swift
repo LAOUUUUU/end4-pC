@@ -10,9 +10,12 @@ private let visualizerBandCount = 24
 @MainActor
 final class VisualizerModel: ObservableObject {
     private static let decay: Float = 0.8
+    private static let peakFall: Float = 0.015
 
     /// Smoothed band levels, each 0...1, drawn by `VisualizerView`.
     @Published private(set) var bands = [Float](repeating: 0, count: visualizerBandCount)
+    /// Peak caps above each bar, 0...1, falling slowly after a bar drops.
+    @Published private(set) var peaks = [Float](repeating: 0, count: visualizerBandCount)
 
     private var tap: SpotifyAudioTap?
     private let shared = SharedBands()
@@ -63,6 +66,7 @@ final class VisualizerModel: ObservableObject {
         timer?.cancel()
         timer = nil
         bands = [Float](repeating: 0, count: visualizerBandCount)
+        peaks = [Float](repeating: 0, count: visualizerBandCount)
     }
 
     /// Redraws at about 30 frames per second, easing the bars toward the latest analysis.
@@ -74,6 +78,9 @@ final class VisualizerModel: ObservableObject {
                 let target = self.shared.latest()
                 self.bands = zip(self.bands, target).map { previous, goal in
                     BandSmoother.step(previous: previous, target: goal, decay: Self.decay)
+                }
+                self.peaks = zip(self.peaks, self.bands).map { peak, level in
+                    PeakHold.step(peak: peak, level: level, fall: Self.peakFall)
                 }
                 try? await Task.sleep(for: .milliseconds(33))
             }

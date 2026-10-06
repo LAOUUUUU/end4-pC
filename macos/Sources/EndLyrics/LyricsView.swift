@@ -12,7 +12,7 @@ struct LyricsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Self.lineSpacing) {
             if let nowPlaying = model.nowPlaying {
-                Text(nowPlaying)
+                Text(model.providerName.map { "\(nowPlaying) · \($0)" } ?? nowPlaying)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.white.opacity(0.55))
                     .lineLimit(1)

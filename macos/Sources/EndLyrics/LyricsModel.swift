@@ -34,7 +34,12 @@ final class LyricsModel: ObservableObject {
     /// Index into `activeWords` of the word being sung, or -1.
     @Published private(set) var highlightedWord = -1
 
+    /// Sources tried in order. LRCLIB first, then NetEase for tracks LRCLIB lacks.
+    private static let chain = LyricsChain(providers: [LRCLibProvider(), NetEaseProvider()])
+
     private var lines: [LyricLine] = []
+    /// Which source supplied the current lyrics, shown in the window.
+    @Published private(set) var providerName: String?
     private var clock = PositionClock()
     private var trackID: String?
     private let cache = LyricsCache.standard
@@ -72,6 +77,7 @@ final class LyricsModel: ObservableObject {
             setActive(-1)
             nowPlaying = nil
             isPlaying = false
+            providerName = nil
             status = .nothingPlaying
         case .success(let snapshot?):
             nowPlaying = "\(snapshot.title) — \(snapshot.artist)"
@@ -89,25 +95,28 @@ final class LyricsModel: ObservableObject {
         loadTask?.cancel()
         lines = []
         setActive(-1)
+        providerName = nil
         status = .loading
 
         let key = snapshot.trackID
         if let cached = cache.lines(for: key) {
             lines = cached
+            providerName = "cache"
             status = .synced
             return
         }
 
         loadTask = Task { [weak self] in
-            let found = await LRCLibClient.fetchSyncedLyrics(
+            let found = await Self.chain.lyrics(
                 title: snapshot.title,
                 artist: snapshot.artist,
                 duration: snapshot.duration
             )
             guard let self, !Task.isCancelled, self.trackID == key else { return }
             if let found {
-                self.cache.store(found, for: key)
-                self.lines = found
+                self.cache.store(found.lines, for: key)
+                self.lines = found.lines
+                self.providerName = found.provider
                 self.status = .synced
             } else {
                 self.status = .notFound

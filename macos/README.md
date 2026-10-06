@@ -33,7 +33,12 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 
 ### Lyric providers
 
-`LyricsChain` asks providers in order and uses the first answer with lines. LRCLIB is the only provider so far. Adding another means writing one type that conforms to `LyricsProvider`.
+`LyricsChain` asks providers in order and uses the first answer with lines. The order is:
+
+1. **LRCLIB** (`api/get`, `api/search`). Free, public, documented. Checked first.
+2. **NetEase Cloud Music** (`music.163.com/api/search/get`, `api/song/lyric`). Used only when LRCLIB has nothing. This API is **undocumented and unofficial**. It can change or stop working without notice, and its terms are unclear. The app makes one search and one lyric request per track, sends the Referer header NetEase requires, and removes credit lines such as "作词 :" from the lyrics. Lyrics are cached after the first fetch.
+
+The window shows which source supplied the current lyrics. Adding another source means writing one type that conforms to `LyricsProvider`.
 
 ### Checking the audio tap
 
@@ -80,7 +85,8 @@ ENDLYRICS_LIVE_TESTS=1 swift test --filter 'LRCLibLiveTests|SpotifyBridgeLiveTes
 ## Limitations and open questions
 
 - **Spotify's developer policy.** The [Developer Policy](https://developer.spotify.com/policy) covers apps that use the Spotify Platform. It is not clear whether an app that only reads the desktop client through AppleScript falls under it. Ask Spotify before any public release.
-- **Lyrics licensing.** LRCLIB states no terms, and its lyrics are user-contributed. Treat this as personal use until that is clarified.
+- **Lyrics licensing.** LRCLIB states no terms, and its lyrics are user-contributed. NetEase lyrics come from an unofficial API. Treat both as personal use only.
+- **NetEase stability.** The NetEase endpoints are not documented, so they may break. If NetEase stops answering, the chain falls back to nothing and the window shows "No synced lyrics for this track."
 - **Ads.** During an ad, Spotify may report no current track. The app then shows "Nothing playing in Spotify". This has not been checked during a real ad.
 - **Spotify updates.** Spotify can change its AppleScript dictionary in any update. If a read fails, the window shows the error message from `osascript`. This failure path is covered by a unit test, not tested against a real broken Spotify.
 - **Platform.** Built and tested on macOS 26 only.
