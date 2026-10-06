@@ -53,6 +53,10 @@ Share your whole desktop with one button, or try someone else's in a click.
 - ✅ **Every preset is checked** automatically. First-time authors are reviewed by hand, and trusted authors are merged automatically once the check passes.
 - 👤 **Yours stays yours:** only the person who shared a preset can change or remove it.
 
+## 🎵 macOS Lyrics Companion
+
+This fork also includes a macOS app in [`macos/`](macos/README.md). It shows synced lyrics for the Spotify desktop app in a floating window, the same lyrics this shell's widget shows. The shell itself runs only on Linux, so the Mac app is a separate Swift project in this repo. See [`macos/README.md`](macos/README.md) to build and run it.
+
 [Browse the gallery](https://github.com/pctrade/end4-pCpresets) · [How to share yours](https://github.com/pctrade/end4-pCpresets#share-your-preset)
 
 ---
