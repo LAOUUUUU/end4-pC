@@ -10,7 +10,7 @@ public enum SpotifyBridgeError: Error, Equatable {
 public enum SpotifyBridge {
     /// Prints one separator-delimited line, or nothing when Spotify is not running or has no track.
     /// Checks `is running` first so it never launches Spotify.
-    public static let script = #"""
+    public static let readScript = #"""
     set sep to ASCII character 31
     if application "Spotify" is not running then return ""
     tell application "Spotify"
@@ -25,7 +25,7 @@ public enum SpotifyBridge {
 
     /// Current playback, `nil` when nothing is playing, or an error when the script could not run.
     public static func read() async -> Result<PlaybackSnapshot?, SpotifyBridgeError> {
-        let run = await runOsascript()
+        let run = await run(script: readScript)
         return interpret(exitCode: run.exitCode, stdout: run.stdout, stderr: run.stderr)
     }
 
@@ -41,7 +41,8 @@ public enum SpotifyBridge {
         return .success(SpotifyPlaybackParser.parse(stdout))
     }
 
-    private static func runOsascript() async -> (exitCode: Int32, stdout: String, stderr: String) {
+    /// Runs AppleScript through `osascript` and returns its exit code and output.
+    public static func run(script: String) async -> (exitCode: Int32, stdout: String, stderr: String) {
         await Task.detached(priority: .userInitiated) {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")

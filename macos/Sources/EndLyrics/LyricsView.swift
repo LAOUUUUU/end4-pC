@@ -5,6 +5,7 @@ import SwiftUI
 /// the active line is largest and fully opaque, its neighbours step down.
 struct LyricsView: View {
     @ObservedObject var model: LyricsModel
+    @ObservedObject var visualizer: VisualizerModel
 
     private static let lineSpacing: CGFloat = 6
 
@@ -17,15 +18,22 @@ struct LyricsView: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+            VisualizerView(model: visualizer)
             switch model.status {
             case .synced:
                 ForEach(Array(model.slots.enumerated()), id: \.offset) { index, text in
+                    if index == LyricsTimeline.before, !model.activeWords.isEmpty {
+                        KaraokeLine(words: model.activeWords, highlighted: model.highlightedWord)
+                            .font(.system(size: Self.fontSize(distance: 0)))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
                     Text(text)
                         .font(.system(size: Self.fontSize(distance: Self.distance(index))))
                         .opacity(Self.opacity(distance: Self.distance(index)))
                         .foregroundStyle(.white)
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
             case .loading:
                 ProgressView()
@@ -38,6 +46,7 @@ struct LyricsView: View {
             case .error(let detail):
                 message("Can't read Spotify. Allow control under Privacy & Security > Automation.\n\(detail)")
             }
+            PlaybackControlsView()
         }
         .padding(16)
         .frame(minWidth: 320, minHeight: 200, alignment: .topLeading)
@@ -76,6 +85,21 @@ struct LyricsView: View {
         case 1: return 0.6
         case 2: return 0.35
         default: return 0.15
+        }
+    }
+}
+
+/// The active line with the sung word at full brightness and the rest dimmed.
+/// Word timing is estimated from line timestamps (see `WordTiming`), not measured per word.
+struct KaraokeLine: View {
+    let words: [WordSpan]
+    let highlighted: Int
+
+    var body: some View {
+        words.enumerated().reduce(Text("")) { line, item in
+            let separator = item.offset == 0 ? "" : " "
+            let color: Color = item.offset <= highlighted ? .white : .white.opacity(0.45)
+            return line + Text(separator + item.element.word).foregroundColor(color)
         }
     }
 }

@@ -25,8 +25,14 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var status: Status = .nothingPlaying
     /// "Title — Artist" for the track Spotify reported last, or nil when nothing is playing.
     @Published private(set) var nowPlaying: String?
+    /// True while Spotify reports the playing state. The visualizer taps audio only then.
+    @Published private(set) var isPlaying = false
     @Published private(set) var slots: [String] = Array(repeating: "", count: LyricsTimeline.total)
     @Published private(set) var activeIndex = -1
+    /// Estimated word timing for the active line, for the karaoke highlight.
+    @Published private(set) var activeWords: [WordSpan] = []
+    /// Index into `activeWords` of the word being sung, or -1.
+    @Published private(set) var highlightedWord = -1
 
     private var lines: [LyricLine] = []
     private var clock = PositionClock()
@@ -65,9 +71,11 @@ final class LyricsModel: ObservableObject {
             lines = []
             setActive(-1)
             nowPlaying = nil
+            isPlaying = false
             status = .nothingPlaying
         case .success(let snapshot?):
             nowPlaying = "\(snapshot.title) — \(snapshot.artist)"
+            isPlaying = snapshot.state == .playing
             clock.resync(position: snapshot.position, playing: snapshot.state == .playing, at: Date())
             let afterError = status.isError
             if TrackChangePolicy.shouldLoad(previous: trackID, next: snapshot.trackID, afterError: afterError) {
@@ -112,10 +120,22 @@ final class LyricsModel: ObservableObject {
         let position = clock.position(at: Date()) + Self.leadSeconds
         let index = LyricsTimeline.activeIndex(at: position, in: lines)
         if index != activeIndex { setActive(index) }
+        let word = WordTiming.activeWordIndex(in: activeWords, at: position)
+        if word != highlightedWord { highlightedWord = word }
     }
 
     private func setActive(_ index: Int) {
         activeIndex = index
         slots = LyricsTimeline.slots(activeIndex: index, in: lines)
+        if index >= 0 && index < lines.count {
+            activeWords = WordTiming.spans(
+                for: lines[index].text,
+                start: lines[index].time,
+                end: WordTiming.lineEnd(of: index, in: lines)
+            )
+        } else {
+            activeWords = []
+        }
+        highlightedWord = -1
     }
 }

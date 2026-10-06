@@ -17,11 +17,13 @@
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
-    <string>14.0</string>
+    <string>14.2</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.music</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>EndLyrics listens to Spotify's audio to draw the visualizer. It does not record or save anything.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>EndLyrics reads what Spotify is playing so it can show the matching lyrics.</string>
 </dict>
