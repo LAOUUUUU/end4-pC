@@ -146,6 +146,7 @@ struct FullscreenMenuView: View {
             }
             tile("gearshape", "Settings", "Player, colours, bars") { navigator.page = .settings }
             tile("doc.on.doc", "Copy Lyric", "Current line") { actions.copyCurrentLyric() }
+            tile("doc.on.clipboard", "Copy Lyrics", "Whole song") { actions.copyAllLyrics() }
             tile("power", "Quit", "Close EndLyrics") { NSApp.terminate(nil) }
         }
     }

@@ -57,6 +57,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var backgroundImagePath: String?
     /// Post a notification when the track changes.
     public var notifyOnTrackChange = false
+    /// Open the full-screen main menu when the app starts.
+    public var openMainMenuAtLaunch = true
 
     public init() {}
 
@@ -77,12 +79,13 @@ public struct AppSettings: Codable, Equatable, Sendable {
         backgroundBlur = try c.decodeIfPresent(Double.self, forKey: .backgroundBlur) ?? defaults.backgroundBlur
         backgroundImagePath = try c.decodeIfPresent(String.self, forKey: .backgroundImagePath)
         notifyOnTrackChange = try c.decodeIfPresent(Bool.self, forKey: .notifyOnTrackChange) ?? defaults.notifyOnTrackChange
+        openMainMenuAtLaunch = try c.decodeIfPresent(Bool.self, forKey: .openMainMenuAtLaunch) ?? defaults.openMainMenuAtLaunch
         player = try c.decodeIfPresent(PlayerChoice.self, forKey: .player) ?? defaults.player
     }
 
     private enum Keys: String, CodingKey {
         case barCount, style, showPeakCaps, colorSource, solidColor, lyricOffset, compactMode
-        case clickToSeek, lyricScale, backgroundBlur, backgroundImagePath, notifyOnTrackChange, player
+        case clickToSeek, lyricScale, backgroundBlur, backgroundImagePath, notifyOnTrackChange, player, openMainMenuAtLaunch
     }
 
     /// The same settings with out-of-range values pulled back into the allowed set.

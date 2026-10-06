@@ -59,6 +59,7 @@ final class MainMenuController: NSObject {
             .separator(),
             item("Click a Line to Jump", #selector(toggleClickToSeek)),
             item("Copy Current Lyric", #selector(copyCurrentLyric), key: "c", modifiers: [.command, .option]),
+            item("Copy All Lyrics", #selector(copyAllLyrics), key: "c", modifiers: [.command, .option, .shift]),
         ]))
         main.addItem(submenu(title: "Window", items: [
             item("Minimize", #selector(minimize), key: "m"),
@@ -165,6 +166,13 @@ final class MainMenuController: NSObject {
     var openSettings: (() -> Void)?
 
     @objc func settings() { openSettings?() }
+
+    @objc func copyAllLyrics() {
+        let lines = model.loadedLines
+        guard !lines.isEmpty else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(LyricsExport.txt(lines), forType: .string)
+    }
 
     @objc func copyCurrentLyric() {
         let line = model.currentLineText

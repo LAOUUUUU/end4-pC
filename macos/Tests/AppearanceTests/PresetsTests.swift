@@ -73,3 +73,15 @@ final class SettingsCompatibilityTests: XCTestCase {
         XCTAssertFalse(decoded.notifyOnTrackChange)
     }
 }
+
+final class LaunchSettingTests: XCTestCase {
+    func testMainMenuOpensAtLaunchByDefault() {
+        XCTAssertTrue(AppSettings().openMainMenuAtLaunch)
+    }
+
+    func testOlderSettingsKeepTheLaunchDefault() throws {
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"barCount":12}"#.utf8))
+
+        XCTAssertTrue(decoded.openMainMenuAtLaunch)
+    }
+}

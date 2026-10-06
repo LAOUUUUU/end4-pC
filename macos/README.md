@@ -40,6 +40,10 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 
 ### Main menu
 
+The full-screen main menu opens when EndLyrics starts. Turn this off under Settings → "Open the main menu when EndLyrics starts". The lyric window is still shown alongside it.
+
+Lyrics → **Copy All Lyrics** (⌥⌘⇧C) copies the whole song's lyrics to the clipboard, as plain text.
+
 The **♪** item in the menu bar opens a **full-screen main menu**: a real macOS full-screen page with the blurred cover as its background, large lyrics and cover art on the left, and a grid of tiles on the right. It has the playback controls, the timing and save actions, the Now Playing and compact toggles, Settings, and Quit. Press Esc or the ✕ to leave. You can also open it with ⇧⌘M from the View menu. Right-click ♪ for the plain menu.
 
 The system menu bar at the top of the screen cannot be drawn in custom colours by any app, so it keeps macOS's style.

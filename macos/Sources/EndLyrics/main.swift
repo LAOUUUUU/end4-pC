@@ -74,6 +74,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         fullscreenMenu = fullscreen
         menu.openFullscreen = { fullscreen.show() }
         menu.openSettings = { fullscreen.show(page: .settings) }
+        if theme.settings.openMainMenuAtLaunch {
+            fullscreen.show()
+        }
         let notifier = TrackNotifier()
         var lastAnnounced: String?
         model.onTrackChanged = { [weak self] id, title, artist in

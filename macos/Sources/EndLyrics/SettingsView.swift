@@ -66,6 +66,7 @@ struct SettingsView: View {
 
             section("Notifications and startup") {
                 Toggle("Notify when the track changes", isOn: binding(\.notifyOnTrackChange))
+                Toggle("Open the main menu when EndLyrics starts", isOn: binding(\.openMainMenuAtLaunch))
                 Toggle("Open EndLyrics at login", isOn: Binding(
                     get: { launchAtLogin },
                     set: { value in
