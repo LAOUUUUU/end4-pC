@@ -105,10 +105,11 @@ struct PlaybackControlsView: View {
     }
 }
 
-/// Thin bar showing how far through the track playback is.
+/// Thin bar showing how far through the track playback is. Click or drag to seek.
 struct ProgressBarView: View {
     let fraction: Double
     let accent: Color
+    var onSeek: ((Double) -> Void)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -117,8 +118,16 @@ struct ProgressBarView: View {
                 Capsule().fill(accent)
                     .frame(width: geometry.size.width * fraction)
             }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { value in
+                        guard geometry.size.width > 0 else { return }
+                        onSeek?(value.location.x / geometry.size.width)
+                    }
+            )
         }
-        .frame(height: 3)
+        .frame(height: 10)
     }
 }
 

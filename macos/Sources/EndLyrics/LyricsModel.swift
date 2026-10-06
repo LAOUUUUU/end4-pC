@@ -50,6 +50,8 @@ final class LyricsModel: ObservableObject {
     /// Now Playing view (cover, large lyrics) instead of the standard panel.
     @Published var expanded = false
     private var trackDuration = 0.0
+    /// Seconds of the current track, from the last poll.
+    var durationSeconds: Double { trackDuration }
     @Published private(set) var slots: [String] = Array(repeating: "", count: LyricsTimeline.total)
     @Published private(set) var activeIndex = -1
     /// Estimated word timing for the active line, for the karaoke highlight.
@@ -174,6 +176,15 @@ final class LyricsModel: ObservableObject {
         volume = level
         let value = Int(level.rounded())
         Task { await SpotifyVolume.send(value) }
+    }
+
+    /// Jumps to `fraction` (0...1) of the current track. Used by the seek bar.
+    func seek(toFraction fraction: Double) {
+        guard trackDuration > 0 else { return }
+        let time = min(1, max(0, fraction)) * trackDuration
+        clock.resync(position: time, playing: isPlaying, at: Date())
+        progress = min(1, max(0, fraction))
+        Task { await SpotifySeek.send(to: time) }
     }
 
     func togglePlayPause() {

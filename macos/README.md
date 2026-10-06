@@ -35,6 +35,8 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 10. **Now Playing view.** The ⤢ button in the header switches to a larger layout with the cover, the visualizer, large lyrics, and the controls. The cover is shown with the text "Cover art from Spotify" and an "Open in Spotify" link, which Spotify's developer policy asks for. The window animates between the two sizes.
 11. **Animation.** Lyric lines spring into place and fade as the song moves on. The play/pause icon morphs between its two states. The window keeps a fixed size, so content changes do not make it jump while you drag it.
 8. **Click a line to jump.** Clicking a lyric line moves Spotify to that line's start time. This changes the playback position, so it only happens on a click.
+12. **Seek bar.** Click or drag the progress bar to move to that point in the track. This is ported from the shell's media controls.
+13. **Blurred cover background.** The Now Playing view puts the cover behind its gradient, blurred and faded, as the shell's media widget does.
 
 ### Main menu
 

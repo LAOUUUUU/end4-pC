@@ -36,7 +36,7 @@ struct NowPlayingView: View {
             }
 
             VisualizerView(model: visualizer, theme: theme)
-            ProgressBarView(fraction: model.progress, accent: theme.accent)
+            ProgressBarView(fraction: model.progress, accent: theme.accent) { model.seek(toFraction: $0) }
             LyricsStack(model: model, theme: theme, font: 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             VolumeSliderView(model: model, theme: theme)
@@ -46,8 +46,17 @@ struct NowPlayingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Without a backdrop, the white text sits on whatever is behind the panel and disappears.
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(LinearGradient(colors: theme.backgroundColors, startPoint: .top, endPoint: .bottom))
+            ZStack {
+                // The cover, blurred and faded, as the shell's media widget does.
+                AsyncImage(url: model.artworkURL) { image in
+                    image.resizable().scaledToFill().blur(radius: 40).opacity(0.45)
+                } placeholder: {
+                    Color.clear
+                }
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(LinearGradient(colors: theme.backgroundColors, startPoint: .top, endPoint: .bottom))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         )
     }
 }
