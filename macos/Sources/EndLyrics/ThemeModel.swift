@@ -14,6 +14,8 @@ final class ThemeModel: ObservableObject {
     }
     /// Up to three colours from the current cover art, most prominent first.
     @Published private(set) var palette: [RGB] = []
+    /// Cover art of the current track, for the blurred background. Never shown without attribution.
+    @Published private(set) var artworkURL: URL?
 
     private var artworkSubscription: AnyCancellable?
 
@@ -43,12 +45,14 @@ final class ThemeModel: ObservableObject {
     func follow(_ artwork: Published<URL?>.Publisher) {
         artworkSubscription = artwork.removeDuplicates().sink { [weak self] url in
             Task { [weak self] in
+                self?.artworkURL = url
                 guard let url else {
-                    self?.palette = []
+                    withAnimation(.easeInOut(duration: 0.8)) { self?.palette = [] }
                     return
                 }
                 let colors = await ArtworkPalette.colors(from: url)
-                self?.palette = colors
+                // Fade between covers rather than snapping to the new colours.
+                withAnimation(.easeInOut(duration: 0.8)) { self?.palette = colors }
             }
         }
     }

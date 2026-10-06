@@ -58,6 +58,12 @@ The menu bar has **EndLyrics**, **Playback**, **View**, **Lyrics**, **Window**, 
 
 The Manzana project (MIT) fetches lyrics from Apple Music with your logged-in `media-user-token` cookie, and makes lyric videos in its paid tiers. Its Apple Music fetch is not in this app: it relies on a private web API that needs your browser session token, and Apple's official lyrics endpoint needs a privileged developer token that cannot be shipped in an app. Lyric videos and word-level sync are sold products.
 
+### Players
+
+The window follows **Spotify**, **Apple Music**, or **whichever is playing** (Settings → Player). Apple Music is read and controlled through its AppleScript dictionary, which has the same playback properties as Spotify's. Automatic mode checks Spotify first, then Apple Music, and runs both reads each second while nothing is playing. Apple Music does not expose a cover URL, so its track has no album-colour palette and falls back to the default cyan.
+
+**Apple Music support is not yet checked against a running Music app.** The parser and scripts are unit tested. Verify with Music open and a song playing.
+
 ### Settings
 
 Open the menu-bar ♪ item and choose **Settings…** (⌘,).
@@ -121,6 +127,7 @@ ENDLYRICS_LIVE_TESTS=1 swift test --filter 'LRCLibLiveTests|SpotifyBridgeLiveTes
 | `Sources/AudioVisualizer` | FFT spectrum analyzer, mono mixdown, band smoothing, peak caps, resampling |
 | `Sources/Appearance` | Settings model, RGB colours, dominant-colour extraction |
 | `Sources/LyricsCore` (`LyricsExport`) | LRC and TXT writers, safe file names |
+| `Sources/AppleMusicKit` | Apple Music AppleScript reads, controls and parser |
 | `Sources/EndLyrics` | SwiftUI lyrics view, model, and the AppKit panel and menu bar item |
 | `Tests/` | Unit tests for each core piece, plus opt-in live tests |
 | `Resources/Info.plist` | Bundle metadata, including the Automation usage string |

@@ -59,3 +59,18 @@ final class VisualizerStyleSettingTests: XCTestCase {
         XCTAssertEqual(decoded.style, .mirror)
     }
 }
+
+final class PlayerChoiceSettingTests: XCTestCase {
+    func testDefaultPlayerIsSpotify() {
+        XCTAssertEqual(AppSettings().player, .spotify)
+    }
+
+    func testPlayerChoiceSurvivesJSON() throws {
+        var settings = AppSettings()
+        settings.player = .appleMusic
+
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+
+        XCTAssertEqual(decoded.player, .appleMusic)
+    }
+}

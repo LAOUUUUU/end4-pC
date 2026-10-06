@@ -16,6 +16,14 @@ public enum VisualizerStyle: String, Codable, CaseIterable, Sendable {
     case mirror
 }
 
+/// Which music app the window follows.
+public enum PlayerChoice: String, Codable, CaseIterable, Sendable {
+    case spotify
+    case appleMusic
+    /// Whichever app is playing, Spotify first.
+    case automatic
+}
+
 /// User choices for the window. Stored as JSON in UserDefaults.
 public struct AppSettings: Codable, Equatable, Sendable {
     public static let barCountChoices = [12, 16, 24, 32]
@@ -23,6 +31,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
 
     public var barCount = 24
     public var style: VisualizerStyle = .bars
+    public var player: PlayerChoice = .spotify
     public var showPeakCaps = true
     public var colorSource: ColorSource = .album
     public var solidColor = RGB(red: 0.2, green: 0.9, blue: 1.0)

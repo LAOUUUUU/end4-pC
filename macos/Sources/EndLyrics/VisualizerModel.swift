@@ -17,6 +17,9 @@ final class VisualizerModel: ObservableObject {
     /// Peak caps above each bar, 0...1, falling slowly after a bar drops.
     @Published private(set) var peaks = [Float](repeating: 0, count: visualizerBandCount)
 
+    /// Bundle id prefix of the app whose audio is tapped (Spotify or Apple Music).
+    private(set) var bundlePrefix = "com.spotify"
+
     private var tap: SpotifyAudioTap?
     private let shared = SharedBands()
     private var timer: Task<Void, Never>?
@@ -26,6 +29,16 @@ final class VisualizerModel: ObservableObject {
     func follow(_ isPlaying: Published<Bool>.Publisher) {
         subscription = isPlaying.removeDuplicates().sink { [weak self] playing in
             self?.setPlaying(playing)
+        }
+    }
+
+    /// Switches to another app's audio. A running tap is restarted on the new app.
+    func setBundlePrefix(_ prefix: String) {
+        guard prefix != bundlePrefix else { return }
+        bundlePrefix = prefix
+        if tap != nil {
+            stopTap()
+            startTapIfNeeded()
         }
     }
 
@@ -43,7 +56,7 @@ final class VisualizerModel: ObservableObject {
         let tap = SpotifyAudioTap()
         let shared = shared
         do {
-            try tap.start { samples in
+            try tap.start(bundlePrefix: bundlePrefix) { samples in
                 shared.consume(samples)
             }
         } catch {

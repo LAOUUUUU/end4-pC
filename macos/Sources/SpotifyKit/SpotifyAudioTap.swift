@@ -17,8 +17,6 @@ public final class SpotifyAudioTap {
     /// Receives mono samples, on a background queue.
     public typealias Handler = @Sendable ([Float]) -> Void
 
-    private static let spotifyBundlePrefix = "com.spotify"
-
     private var tapID = AudioObjectID(kAudioObjectUnknown)
     private var aggregateID = AudioObjectID(kAudioObjectUnknown)
     private var ioProcID: AudioDeviceIOProcID?
@@ -29,11 +27,11 @@ public final class SpotifyAudioTap {
 
     public init() {}
 
-    /// Starts tapping every Spotify process that is currently producing audio.
-    public func start(handler: @escaping Handler) throws {
+    /// Starts tapping every process whose bundle id starts with `bundlePrefix` that is producing audio.
+    public func start(bundlePrefix: String = "com.spotify", handler: @escaping Handler) throws {
         stop()
 
-        let processes = try Self.spotifyOutputProcesses()
+        let processes = try Self.outputProcesses(bundlePrefix: bundlePrefix)
         guard !processes.isEmpty else { throw SpotifyAudioTapError.noSpotifyAudioProcess }
 
         let description = CATapDescription(stereoMixdownOfProcesses: processes)
@@ -87,8 +85,8 @@ public final class SpotifyAudioTap {
         stop()
     }
 
-    /// Audio process objects whose bundle id is Spotify's and that are producing output.
-    static func spotifyOutputProcesses() throws -> [AudioObjectID] {
+    /// Audio process objects whose bundle id starts with `bundlePrefix` and that are producing output.
+    static func outputProcesses(bundlePrefix: String) throws -> [AudioObjectID] {
         let all = try audioObjectIDs(
             of: AudioObjectID(kAudioObjectSystemObject),
             selector: kAudioHardwarePropertyProcessObjectList
@@ -96,7 +94,7 @@ public final class SpotifyAudioTap {
         return all.filter { process in
             let bundle = (try? stringProperty(of: process, selector: kAudioProcessPropertyBundleID)) ?? ""
             let running = (try? uint32Property(of: process, selector: kAudioProcessPropertyIsRunningOutput)) ?? 0
-            return bundle.hasPrefix(spotifyBundlePrefix) && running != 0
+            return bundle.hasPrefix(bundlePrefix) && running != 0
         }
     }
 

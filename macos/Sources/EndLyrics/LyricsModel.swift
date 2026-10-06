@@ -90,7 +90,8 @@ final class LyricsModel: ObservableObject {
     }
 
     private func poll() async {
-        switch await SpotifyBridge.read() {
+        defer { if source != router.source { source = router.source } }
+        switch await router.read() {
         case .failure(let error):
             if case .scriptFailed(let message) = error {
                 status = .error(message)
@@ -169,13 +170,23 @@ final class LyricsModel: ObservableObject {
         if word != highlightedWord { highlightedWord = word }
     }
 
+    /// Routes playback to Spotify or Apple Music, whichever the settings and the last read chose.
+    let router = PlayerRouter()
+    /// The app the last read came from. The visualizer taps that app's audio.
+    @Published private(set) var source: MusicSource = .spotify
+
+    /// Sends a playback command to the current app.
+    func command(_ command: PlayerCommand) {
+        Task { await router.command(command) }
+    }
+
     /// True while the user drags the volume slider, so polls do not fight the drag.
     var volumeEditing = false
 
     func setVolume(_ level: Double) {
         volume = level
         let value = Int(level.rounded())
-        Task { await SpotifyVolume.send(value) }
+        Task { await router.setVolume(value) }
     }
 
     /// Jumps to `fraction` (0...1) of the current track. Used by the seek bar.
@@ -184,24 +195,24 @@ final class LyricsModel: ObservableObject {
         let time = min(1, max(0, fraction)) * trackDuration
         clock.resync(position: time, playing: isPlaying, at: Date())
         progress = min(1, max(0, fraction))
-        Task { await SpotifySeek.send(to: time) }
+        Task { await router.seek(to: time) }
     }
 
     func togglePlayPause() {
         isPlaying.toggle()
-        Task { await SpotifyCommand.playPause.send() }
+        Task { await router.command(.playPause) }
     }
 
     func toggleShuffle() {
         shuffling.toggle()
         let on = shuffling
-        Task { await SpotifyToggle.send(SpotifyToggle.shuffle(on: on)) }
+        Task { await router.setShuffle(on) }
     }
 
     func toggleRepeat() {
         repeating.toggle()
         let on = repeating
-        Task { await SpotifyToggle.send(SpotifyToggle.repeating(on: on)) }
+        Task { await router.setRepeat(on) }
     }
 
     /// Jumps Spotify to the start of the lyric line shown in `slot` (0...6).
@@ -210,7 +221,7 @@ final class LyricsModel: ObservableObject {
         guard index >= 0, index < lines.count else { return }
         let time = lines[index].time
         clock.resync(position: time, playing: isPlaying, at: Date())
-        Task { await SpotifySeek.send(to: time) }
+        Task { await router.seek(to: time) }
     }
 
     private func setActive(_ index: Int) {

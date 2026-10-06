@@ -60,10 +60,9 @@ struct LyricsView: View {
         .help(model.expanded ? "Standard view" : "Now Playing view")
     }
 
-    /// Dark glass, with a wash of the cover's colours behind it.
+    /// The cover, blurred, behind a gradient of its colours.
     private var backdrop: some View {
-        RoundedRectangle(cornerRadius: 14)
-            .fill(LinearGradient(colors: theme.backgroundColors, startPoint: .top, endPoint: .bottom))
+        CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors)
     }
 }
 

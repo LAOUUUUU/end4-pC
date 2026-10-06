@@ -103,8 +103,8 @@ final class MainMenuController: NSObject {
     // MARK: - Playback
 
     @objc private func playPause() { model.togglePlayPause() }
-    @objc private func next() { Task { await SpotifyCommand.next.send() } }
-    @objc private func previous() { Task { await SpotifyCommand.previous.send() } }
+    @objc private func next() { model.command(.next) }
+    @objc private func previous() { model.command(.previous) }
     @objc private func volumeUp() { model.setVolume(min(100, model.volume + 10)) }
     @objc private func volumeDown() { model.setVolume(max(0, model.volume - 10)) }
     @objc private func toggleShuffle() { model.toggleShuffle() }

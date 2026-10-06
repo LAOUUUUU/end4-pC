@@ -80,9 +80,9 @@ struct PlaybackControlsView: View {
         .buttonStyle(.plain)
     }
 
-    private func control(_ symbol: String, _ command: SpotifyCommand) -> some View {
+    private func control(_ symbol: String, _ command: PlayerCommand) -> some View {
         Button {
-            Task { await command.send() }
+            model.command(command)
         } label: {
             Image(systemName: symbol)
                 .font(.system(size: 14, weight: .semibold))

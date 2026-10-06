@@ -7,6 +7,14 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Player") {
+                Picker("Follow", selection: binding(\.player)) {
+                    Text("Spotify").tag(PlayerChoice.spotify)
+                    Text("Apple Music").tag(PlayerChoice.appleMusic)
+                    Text("Whichever is playing").tag(PlayerChoice.automatic)
+                }
+            }
+
             Section("Visualizer") {
                 Picker("Style", selection: binding(\.style)) {
                     Text("Bars").tag(VisualizerStyle.bars)
@@ -44,7 +52,9 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 420, height: 520)
+        .scrollContentBackground(.hidden)
+        .background(CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors).ignoresSafeArea())
+        .frame(width: 420, height: 560)
     }
 
     private func binding<Value>(_ keyPath: WritableKeyPath<AppSettings, Value>) -> Binding<Value> {

@@ -36,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var offsetSubscription: AnyCancellable?
     private var expandSubscription: AnyCancellable?
     private var mainMenu: MainMenuController?
+    private var playerSubscription: AnyCancellable?
+    private var sourceSubscription: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Regular, not accessory, so the main menu bar appears when the app is active.
@@ -43,6 +45,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         makePanel()
         makeStatusItem()
         visualizer.follow(model.$isPlaying)
+        playerSubscription = theme.$settings
+            .map(\.player)
+            .removeDuplicates()
+            .sink { [weak self] choice in self?.model.router.choice = choice }
+        sourceSubscription = model.$source
+            .removeDuplicates()
+            .sink { [weak self] source in self?.visualizer.setBundlePrefix(source.bundlePrefix) }
         theme.follow(model.$artworkURL)
         offsetSubscription = theme.$settings
             .map(\.lyricOffset)
