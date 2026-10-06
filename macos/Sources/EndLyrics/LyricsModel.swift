@@ -27,6 +27,10 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var nowPlaying: String?
     /// True while Spotify reports the playing state. The visualizer taps audio only then.
     @Published private(set) var isPlaying = false
+    /// Cover art URL of the current track, used only for colours.
+    @Published private(set) var artworkURL: URL?
+    /// Seconds added to the playback position when choosing the lyric line (from settings).
+    var offsetSeconds = 0.0
     @Published private(set) var slots: [String] = Array(repeating: "", count: LyricsTimeline.total)
     @Published private(set) var activeIndex = -1
     /// Estimated word timing for the active line, for the karaoke highlight.
@@ -86,6 +90,7 @@ final class LyricsModel: ObservableObject {
             let afterError = status.isError
             if TrackChangePolicy.shouldLoad(previous: trackID, next: snapshot.trackID, afterError: afterError) {
                 trackID = snapshot.trackID
+                artworkURL = snapshot.artworkURL
                 startLoading(snapshot)
             }
         }
@@ -126,11 +131,20 @@ final class LyricsModel: ObservableObject {
 
     private func tick() {
         guard status == .synced else { return }
-        let position = clock.position(at: Date()) + Self.leadSeconds
+        let position = clock.position(at: Date()) + Self.leadSeconds + offsetSeconds
         let index = LyricsTimeline.activeIndex(at: position, in: lines)
         if index != activeIndex { setActive(index) }
         let word = WordTiming.activeWordIndex(in: activeWords, at: position)
         if word != highlightedWord { highlightedWord = word }
+    }
+
+    /// Jumps Spotify to the start of the lyric line shown in `slot` (0...6).
+    func seek(toSlot slot: Int) {
+        let index = activeIndex - LyricsTimeline.before + slot
+        guard index >= 0, index < lines.count else { return }
+        let time = lines[index].time
+        clock.resync(position: time, playing: isPlaying, at: Date())
+        Task { await SpotifySeek.send(to: time) }
     }
 
     private func setActive(_ index: Int) {

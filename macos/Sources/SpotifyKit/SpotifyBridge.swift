@@ -16,7 +16,7 @@ public enum SpotifyBridge {
     tell application "Spotify"
       try
         set t to current track
-        return (id of t) & sep & (name of t) & sep & (artist of t) & sep & (album of t) & sep & ((duration of t) as text) & sep & ((player position) as text) & sep & ((player state) as text)
+        return (id of t) & sep & (name of t) & sep & (artist of t) & sep & (album of t) & sep & ((duration of t) as text) & sep & ((player position) as text) & sep & ((player state) as text) & sep & (artwork url of t)
       on error
         return ""
       end try

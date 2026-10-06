@@ -1,25 +1,35 @@
 import AppKit
+import Appearance
+import Combine
 import SwiftUI
 
-/// Owns the floating lyrics panel and the menu-bar item. Runs as an accessory app: no Dock icon.
+/// Owns the floating lyrics panel, the settings window, and the menu-bar item. Runs as an accessory app: no Dock icon.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let model = LyricsModel()
     private let visualizer = VisualizerModel()
+    private let theme = ThemeModel()
     private var panel: NSPanel?
+    private var settingsWindow: NSWindow?
     private var statusItem: NSStatusItem?
     private var toggleItem: NSMenuItem?
+    private var offsetSubscription: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         makePanel()
         makeStatusItem()
         visualizer.follow(model.$isPlaying)
+        theme.follow(model.$artworkURL)
+        offsetSubscription = theme.$settings
+            .map(\.lyricOffset)
+            .removeDuplicates()
+            .sink { [weak self] offset in self?.model.offsetSeconds = offset }
         model.start()
     }
 
     private func makePanel() {
-        let content = NSHostingView(rootView: LyricsView(model: model, visualizer: visualizer))
+        let content = NSHostingView(rootView: LyricsView(model: model, visualizer: visualizer, theme: theme))
         // Top-left of the main screen, just below the menu bar, so it is easy to find.
         let area = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
         let size = NSSize(width: 360, height: 330)
@@ -49,6 +59,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let toggle = NSMenuItem(title: "Hide Lyrics", action: #selector(togglePanel), keyEquivalent: "")
         toggle.target = self
         menu.addItem(toggle)
+        let settings = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        settings.target = self
+        menu.addItem(settings)
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit EndLyrics", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
@@ -67,10 +80,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             toggleItem?.title = "Hide Lyrics"
         }
     }
+
+    @objc private func showSettings() {
+        if settingsWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 420, height: 520),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "EndLyrics Settings"
+            window.contentView = NSHostingView(rootView: SettingsView(theme: theme))
+            window.isReleasedWhenClosed = false
+            window.center()
+            settingsWindow = window
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
 }
 
 if CommandLine.arguments.contains("--audio-check") {
     AudioCheck.run()
+}
+if CommandLine.arguments.contains("--palette-check") {
+    PaletteCheck.run()
 }
 
 // Top-level code runs on the main thread, which is the main actor.

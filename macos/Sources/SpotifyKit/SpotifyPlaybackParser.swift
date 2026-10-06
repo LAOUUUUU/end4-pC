@@ -17,6 +17,8 @@ public struct PlaybackSnapshot: Equatable, Sendable {
     /// Current position in seconds.
     public let position: Double
     public let state: SpotifyPlayerState
+    /// Cover art URL from Spotify's CDN. Used for colours only; the art itself is not shown.
+    public let artworkURL: URL?
 
     public init(
         trackID: String,
@@ -25,7 +27,8 @@ public struct PlaybackSnapshot: Equatable, Sendable {
         album: String,
         duration: Double,
         position: Double,
-        state: SpotifyPlayerState
+        state: SpotifyPlayerState,
+        artworkURL: URL? = nil
     ) {
         self.trackID = trackID
         self.title = title
@@ -34,6 +37,7 @@ public struct PlaybackSnapshot: Equatable, Sendable {
         self.duration = duration
         self.position = position
         self.state = state
+        self.artworkURL = artworkURL
     }
 }
 
@@ -47,7 +51,7 @@ public enum SpotifyPlaybackParser {
         guard !line.isEmpty else { return nil }
 
         let fields = line.components(separatedBy: separator)
-        guard fields.count == 7 else { return nil }
+        guard fields.count == 8 else { return nil }
 
         let title = fields[1]
         // No current track (for example during an ad) has no title; there is nothing to look up.
@@ -67,7 +71,8 @@ public enum SpotifyPlaybackParser {
             // Spotify's AppleScript reports milliseconds; the dictionary wrongly says seconds.
             duration: durationMs / 1000,
             position: position,
-            state: state
+            state: state,
+            artworkURL: fields[7].isEmpty ? nil : URL(string: fields[7])
         )
     }
 }

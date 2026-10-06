@@ -1,3 +1,4 @@
+import Appearance
 import LyricsCore
 import SwiftUI
 
@@ -6,10 +7,12 @@ import SwiftUI
 struct LyricsView: View {
     @ObservedObject var model: LyricsModel
     @ObservedObject var visualizer: VisualizerModel
+    @ObservedObject var theme: ThemeModel
 
     private static let lineSpacing: CGFloat = 6
 
     var body: some View {
+        let settings = theme.settings
         VStack(alignment: .leading, spacing: Self.lineSpacing) {
             if let nowPlaying = model.nowPlaying {
                 Text(model.providerName.map { "\(nowPlaying) · \($0)" } ?? nowPlaying)
@@ -18,22 +21,13 @@ struct LyricsView: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            VisualizerView(model: visualizer)
+            if !settings.compactMode {
+                VisualizerView(model: visualizer, theme: theme)
+            }
             switch model.status {
             case .synced:
                 ForEach(Array(model.slots.enumerated()), id: \.offset) { index, text in
-                    if index == LyricsTimeline.before, !model.activeWords.isEmpty {
-                        KaraokeLine(words: model.activeWords, highlighted: model.highlightedWord)
-                            .font(.system(size: Self.fontSize(distance: 0)))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                    Text(text)
-                        .font(.system(size: Self.fontSize(distance: Self.distance(index))))
-                        .opacity(Self.opacity(distance: Self.distance(index)))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    lyricLine(index: index, text: text, settings: settings)
                 }
             case .loading:
                 ProgressView()
@@ -46,14 +40,50 @@ struct LyricsView: View {
             case .error(let detail):
                 message("Can't read Spotify. Allow control under Privacy & Security > Automation.\n\(detail)")
             }
-            PlaybackControlsView()
+            if !settings.compactMode {
+                PlaybackControlsView()
+            }
         }
         .padding(16)
         .frame(minWidth: 320, minHeight: 200, alignment: .topLeading)
-        // A dark backdrop keeps the white text readable on light wallpapers.
-        // The shell widget sits on the wallpaper with no backdrop, so this is a deliberate difference.
-        .background(RoundedRectangle(cornerRadius: 14).fill(.black.opacity(0.55)))
+        .background(backdrop)
         .animation(.easeOut(duration: 0.25), value: model.activeIndex)
+    }
+
+    @ViewBuilder
+    private func lyricLine(index: Int, text: String, settings: AppSettings) -> some View {
+        let distance = Self.distance(index)
+        if !settings.compactMode || distance == 0 {
+            Group {
+                if index == LyricsTimeline.before, !model.activeWords.isEmpty {
+                    KaraokeLine(words: model.activeWords, highlighted: model.highlightedWord, accent: theme.accent)
+                        .font(.system(size: Self.fontSize(distance: 0)))
+                } else {
+                    Text(text)
+                        .font(.system(size: Self.fontSize(distance: distance)))
+                        .opacity(Self.opacity(distance: distance))
+                        .foregroundStyle(.white)
+                }
+            }
+            .lineLimit(2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if settings.clickToSeek, !text.isEmpty {
+                    model.seek(toSlot: index)
+                }
+            }
+        }
+    }
+
+    /// Dark glass, with a faint wash of the accent colour at the top.
+    private var backdrop: some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(.black.opacity(0.55))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(LinearGradient(colors: [theme.accent.opacity(0.22), .clear], startPoint: .top, endPoint: .bottom))
+            )
     }
 
     private func message(_ text: String) -> some View {
@@ -89,16 +119,17 @@ struct LyricsView: View {
     }
 }
 
-/// The active line with the sung word at full brightness and the rest dimmed.
+/// The active line with the sung word in the accent colour and the rest dimmed.
 /// Word timing is estimated from line timestamps (see `WordTiming`), not measured per word.
 struct KaraokeLine: View {
     let words: [WordSpan]
     let highlighted: Int
+    let accent: Color
 
     var body: some View {
         words.enumerated().reduce(Text("")) { line, item in
             let separator = item.offset == 0 ? "" : " "
-            let color: Color = item.offset <= highlighted ? .white : .white.opacity(0.45)
+            let color: Color = item.offset <= highlighted ? accent : .white.opacity(0.45)
             return line + Text(separator + item.element.word).foregroundColor(color)
         }
     }

@@ -11,9 +11,10 @@ final class SpotifyPlaybackParserTests: XCTestCase {
         album: String = "After Hours",
         duration: String = "200040",
         position: String = "12.5",
-        state: String = "playing"
+        state: String = "playing",
+        artwork: String = "https://i.scdn.co/image/ab67616d0000b273"
     ) -> String {
-        [id, title, artist, album, duration, position, state].joined(separator: sep)
+        [id, title, artist, album, duration, position, state, artwork].joined(separator: sep)
     }
 
     func testParsesPlayingTrack() throws {
@@ -48,6 +49,24 @@ final class SpotifyPlaybackParserTests: XCTestCase {
     func testMalformedOutputReturnsNil() {
         XCTAssertNil(SpotifyPlaybackParser.parse("only\(sep)three\(sep)fields"))
         XCTAssertNil(SpotifyPlaybackParser.parse(line(position: "not-a-number")))
+    }
+
+    func testParsesArtworkURL() throws {
+        let snapshot = try XCTUnwrap(SpotifyPlaybackParser.parse(line()))
+
+        XCTAssertEqual(snapshot.artworkURL?.absoluteString, "https://i.scdn.co/image/ab67616d0000b273")
+    }
+
+    func testMissingArtworkIsNilNotAnError() throws {
+        let snapshot = try XCTUnwrap(SpotifyPlaybackParser.parse(line(artwork: "")))
+
+        XCTAssertNil(snapshot.artworkURL)
+    }
+
+    func testSevenFieldOutputFromOlderScriptIsRejected() {
+        let sevenFields = ["id", "title", "artist", "album", "1000", "1", "playing"].joined(separator: sep)
+
+        XCTAssertNil(SpotifyPlaybackParser.parse(sevenFields))
     }
 
     func testUnknownStateReturnsNil() {

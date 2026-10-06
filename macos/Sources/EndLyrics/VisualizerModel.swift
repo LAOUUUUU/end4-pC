@@ -4,7 +4,7 @@ import Foundation
 import SpotifyKit
 
 /// Number of frequency bars.
-private let visualizerBandCount = 24
+private let visualizerBandCount = 32
 
 /// Shows Spotify's audio as bars. Taps the audio only while Spotify is playing.
 @MainActor

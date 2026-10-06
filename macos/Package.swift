@@ -11,13 +11,15 @@ let package = Package(
         .target(name: "LyricsCore"),
         .target(name: "SpotifyKit", dependencies: ["AudioVisualizer"]),
         .target(name: "AudioVisualizer"),
+        .target(name: "Appearance"),
         .executableTarget(
             name: "EndLyrics",
-            dependencies: ["LyricsCore", "SpotifyKit", "AudioVisualizer"]
+            dependencies: ["LyricsCore", "SpotifyKit", "AudioVisualizer", "Appearance"]
         ),
         .testTarget(name: "LyricsCoreTests", dependencies: ["LyricsCore"]),
         .testTarget(name: "SpotifyKitTests", dependencies: ["SpotifyKit"]),
         .testTarget(name: "AudioVisualizerTests", dependencies: ["AudioVisualizer"]),
+        .testTarget(name: "AppearanceTests", dependencies: ["Appearance"]),
     ],
     swiftLanguageModes: [.v5]
 )
