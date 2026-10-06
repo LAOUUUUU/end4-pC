@@ -37,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var expandSubscription: AnyCancellable?
     private var mainMenu: MainMenuController?
     private var quickMenu: NSMenu?
-    private let themedMenu = NSPopover()
+    private var fullscreenMenu: FullscreenMenuController?
     private var playerSubscription: AnyCancellable?
     private var sourceSubscription: AnyCancellable?
 
@@ -67,6 +67,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         menu.install()
         mainMenu = menu
+        let fullscreen = FullscreenMenuController(model: model, theme: theme, visualizer: visualizer, actions: menu)
+        fullscreenMenu = fullscreen
+        menu.openFullscreen = { fullscreen.show() }
         model.start()
         expandSubscription = model.$expanded.dropFirst().sink { [weak self] expanded in
             self?.resizePanel(expanded: expanded)
@@ -103,7 +106,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.contentView = content
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = false
+        panel.hasShadow = true
+        content.wantsLayer = true
+        content.layer?.cornerRadius = 14
+        content.layer?.masksToBounds = true
         panel.level = .floating
         panel.isMovableByWindowBackground = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -139,25 +145,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             statusItem.popUpMenu(quickMenu)
             return
         }
-        toggleThemedMenu(sender)
-    }
-
-    private func toggleThemedMenu(_ anchor: NSStatusBarButton) {
-        if themedMenu.isShown {
-            themedMenu.performClose(nil)
-            return
-        }
-        guard let mainMenu else { return }
-        themedMenu.behavior = .transient
-        themedMenu.contentViewController = NSHostingController(rootView: ThemedMenuView(
-            model: model,
-            theme: theme,
-            actions: mainMenu,
-            showSettings: { [weak self] in self?.showSettings() },
-            toggleWindow: { [weak self] in self?.togglePanel() },
-            quit: { NSApp.terminate(nil) }
-        ))
-        themedMenu.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
+        fullscreenMenu?.show()
     }
 
     @objc private func togglePanel() {

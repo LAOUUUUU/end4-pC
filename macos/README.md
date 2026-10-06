@@ -40,17 +40,11 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 
 ### Main menu
 
-Click the **♪** item in the menu bar to open the themed main menu. It has the blurred cover as its background, the now-playing header, the playback controls, and rows for the window, lyrics, and app actions. Right-click ♪ for the plain menu. The system menu bar at the top of the screen cannot be drawn in custom colours by any app, so it keeps macOS's style.
+The **♪** item in the menu bar opens a **full-screen main menu**: a real macOS full-screen page with the blurred cover as its background, large lyrics and cover art on the left, and a grid of tiles on the right. It has the playback controls, the timing and save actions, the Now Playing and compact toggles, Settings, and Quit. Press Esc or the ✕ to leave. You can also open it with ⇧⌘M from the View menu. Right-click ♪ for the plain menu.
 
-The menu bar has **EndLyrics**, **Playback**, **View**, **Lyrics**, **Window**, and **Help** menus. The app now shows in the Dock so the menu bar appears when it is active.
+The system menu bar at the top of the screen cannot be drawn in custom colours by any app, so it keeps macOS's style.
 
-| Menu | Items |
-|---|---|
-| Playback | Play/Pause (Space), Next (⌘→), Previous (⌘←), Volume Up/Down (⌘↑/⌘↓), Toggle Shuffle (⇧⌘S), Toggle Repeat (⇧⌘R) |
-| View | Show/Hide Lyrics Window (⌘L), Now Playing Layout (⌘E), Compact Mode (⇧⌘C), Mirror Visualizer (⇧⌘M) |
-| Lyrics | Save as .lrc… (⌘S), Save as .txt… (⌥⌘S), Millisecond timestamps, Timing later/earlier (] / [), Reset timing (0), Click a line to jump |
-| Window | Minimize (⌘M), Close Window (⌘W) |
-| Help | Lyric sources, Permissions help, Project on GitHub |
+The lyric window's corners are rounded, and its shadow follows the rounded shape.
 
 ### Saving lyrics
 

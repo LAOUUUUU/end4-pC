@@ -12,6 +12,8 @@ final class MainMenuController: NSObject {
     let theme: ThemeModel
     private let showSettings: () -> Void
     private let togglePanel: () -> Void
+    /// Opens the full-screen main menu. Set by the app delegate.
+    var openFullscreen: (() -> Void)?
 
     init(model: LyricsModel, theme: ThemeModel, showSettings: @escaping () -> Void, togglePanel: @escaping () -> Void) {
         self.model = model
@@ -42,10 +44,11 @@ final class MainMenuController: NSObject {
             item("Toggle Repeat", #selector(toggleRepeat), key: "r", modifiers: [.command, .shift]),
         ]))
         main.addItem(submenu(title: "View", items: [
+            item("Full-Screen Main Menu", #selector(fullscreenMenu), key: "m", modifiers: [.command, .shift]),
             item("Show / Hide Lyrics Window", #selector(toggleWindow), key: "l"),
             item("Now Playing Layout", #selector(toggleNowPlaying), key: "e"),
             item("Compact Mode", #selector(toggleCompact), key: "c", modifiers: [.command, .shift]),
-            item("Mirror Visualizer", #selector(toggleMirror), key: "m", modifiers: [.command, .shift]),
+            item("Mirror Visualizer", #selector(toggleMirror), key: "m", modifiers: [.command, .option]),
         ]))
         main.addItem(submenu(title: "Lyrics", items: [
             item("Save as .lrc…", #selector(saveLRC), key: "s"),
@@ -113,6 +116,7 @@ final class MainMenuController: NSObject {
     // MARK: - View
 
     @objc func toggleWindow() { togglePanel() }
+    @objc func fullscreenMenu() { openFullscreen?() }
     @objc func toggleNowPlaying() { model.expanded.toggle() }
     @objc func toggleCompact() { theme.settings.compactMode.toggle() }
     @objc func toggleMirror() {
