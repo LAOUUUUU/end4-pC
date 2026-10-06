@@ -43,6 +43,13 @@ public enum WordTiming {
         return index
     }
 
+    /// How far through the line playback is, 0...1 by time. Drives the smooth sweep of the karaoke highlight.
+    public static func lineProgress(in spans: [WordSpan], at position: Double) -> Double {
+        guard let first = spans.first, let last = spans.last, last.end > first.start else { return 0 }
+        let fraction = (position - first.start) / (last.end - first.start)
+        return min(1, max(0, fraction))
+    }
+
     /// When the line at `index` ends: the next line's start, or a fixed guess for the last line.
     public static func lineEnd(of index: Int, in lines: [LyricLine]) -> Double {
         if index + 1 < lines.count {

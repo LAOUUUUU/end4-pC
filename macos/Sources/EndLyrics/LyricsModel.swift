@@ -62,6 +62,8 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var activeWords: [WordSpan] = []
     /// Index into `activeWords` of the word being sung, or -1.
     @Published private(set) var highlightedWord = -1
+    /// 0...1 through the active line, by time. Drives the smooth sweep of the karaoke highlight.
+    @Published private(set) var lineProgress = 0.0
 
     /// Sources tried in order. LRCLIB first, then NetEase for tracks LRCLIB lacks.
     private static let chain = LyricsChain(providers: [LRCLibProvider(), NetEaseProvider()])
@@ -173,6 +175,8 @@ final class LyricsModel: ObservableObject {
         if abs(fraction - progress) > 0.002 { progress = fraction }
         let word = WordTiming.activeWordIndex(in: activeWords, at: position)
         if word != highlightedWord { highlightedWord = word }
+        let sweep = WordTiming.lineProgress(in: activeWords, at: position)
+        if abs(sweep - lineProgress) > 0.002 { lineProgress = sweep }
     }
 
     /// Routes playback to Spotify or Apple Music, whichever the settings and the last read chose.
@@ -242,5 +246,6 @@ final class LyricsModel: ObservableObject {
             activeWords = []
         }
         highlightedWord = -1
+        lineProgress = 0
     }
 }

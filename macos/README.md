@@ -72,6 +72,14 @@ The window follows **Spotify**, **Apple Music**, or **whichever is playing** (Se
 
 **Apple Music support is not yet checked against a running Music app.** The parser and scripts are unit tested. Verify with Music open and a song playing.
 
+### Keeping permissions across builds
+
+macOS keys its permissions (Automation for Spotify and Music, System Audio Recording, notifications) to the app's code signature. `scripts/build-app.sh` signs with a local certificate named **EndLyrics Local**, so the signature stays the same from one build to the next and macOS keeps your grants.
+
+The certificate is self-signed and lives in your login keychain, not in an Apple developer account. Create it once with `openssl` and import it with `security import` (the private key is only in the keychain). If it is missing, the script falls back to ad-hoc signing, and macOS asks for the permissions again after each build. Override the name with `ENDLYRICS_SIGN_IDENTITY`.
+
+The first build after switching asks for the permissions once more.
+
 ### Settings
 
 Settings is a page inside the full-screen main menu. Open it from ♪ or ⌘, and switch between **Home** and **Settings** at the top. There are no separate windows.

@@ -56,3 +56,22 @@ final class WordTimingTests: XCTestCase {
         XCTAssertEqual(WordTiming.lineEnd(of: 1, in: lines), 8, accuracy: 0.0001)
     }
 }
+
+final class LineProgressTests: XCTestCase {
+    func testProgressIsZeroBeforeTheLineAndOneAfterIt() {
+        let spans = WordTiming.spans(for: "a bb", start: 10, end: 14)
+
+        XCTAssertEqual(WordTiming.lineProgress(in: spans, at: 5), 0)
+        XCTAssertEqual(WordTiming.lineProgress(in: spans, at: 20), 1)
+    }
+
+    func testProgressIsTheElapsedShareOfTheLine() {
+        let spans = WordTiming.spans(for: "a bb", start: 10, end: 14)
+
+        XCTAssertEqual(WordTiming.lineProgress(in: spans, at: 12), 0.5, accuracy: 0.0001)
+    }
+
+    func testEmptyLineHasNoProgress() {
+        XCTAssertEqual(WordTiming.lineProgress(in: [], at: 3), 0)
+    }
+}

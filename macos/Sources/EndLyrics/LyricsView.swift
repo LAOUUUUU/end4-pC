@@ -96,6 +96,7 @@ struct LyricsStack: View {
             }
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.85), value: model.activeIndex)
+        .animation(.linear(duration: 0.12), value: model.lineProgress)
     }
 
     @ViewBuilder
@@ -104,9 +105,9 @@ struct LyricsStack: View {
         if !compact || distance == 0 {
             Group {
                 if index == LyricsTimeline.before, !model.activeWords.isEmpty {
-                    KaraokeLine(words: model.activeWords, highlighted: model.highlightedWord, accent: theme.accent)
-                        .font(.system(size: font))
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    KaraokeLine(text: text, progress: model.lineProgress, accent: theme.accent)
+                        .font(.system(size: font, weight: .semibold))
+                        .transition(.opacity.combined(with: .scale(scale: 0.94, anchor: .leading)))
                 } else {
                     Text(text)
                         .font(.system(size: size(distance: distance)))
@@ -117,6 +118,7 @@ struct LyricsStack: View {
             }
             .id("\(index)-\(text)")
             .lineLimit(2)
+            .scaleEffect(distance == 0 ? 1 : 0.96, anchor: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
@@ -155,18 +157,23 @@ struct LyricsStack: View {
     }
 }
 
-/// The active line with the sung word in the accent colour and the rest dimmed.
-/// Word timing is estimated from line timestamps (see `WordTiming`), not measured per word.
+/// The active line, filled in the accent colour from the left as it is sung.
+/// The sweep follows the estimated line timing (see `WordTiming`), with a soft edge.
 struct KaraokeLine: View {
-    let words: [WordSpan]
-    let highlighted: Int
+    let text: String
+    let progress: Double
     let accent: Color
 
     var body: some View {
-        words.enumerated().reduce(Text("")) { line, item in
-            let separator = item.offset == 0 ? "" : " "
-            let color: Color = item.offset <= highlighted ? accent : .white.opacity(0.45)
-            return line + Text(separator + item.element.word).foregroundColor(color)
-        }
+        let edge = min(1, max(0, progress))
+        Text(text)
+            .foregroundStyle(LinearGradient(
+                stops: [
+                    .init(color: accent, location: max(0, edge - 0.04)),
+                    .init(color: .white.opacity(0.45), location: min(1, edge + 0.04)),
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            ))
     }
 }
