@@ -18,8 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func makePanel() {
         let content = NSHostingView(rootView: LyricsView(model: model))
+        // Top-left of the main screen, just below the menu bar, so it is easy to find.
+        let area = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
+        let size = NSSize(width: 360, height: 240)
+        let origin = NSPoint(x: area.minX + 24, y: area.maxY - size.height - 24)
         let panel = NSPanel(
-            contentRect: NSRect(x: 80, y: 120, width: 360, height: 240),
+            contentRect: NSRect(origin: origin, size: size),
             styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false

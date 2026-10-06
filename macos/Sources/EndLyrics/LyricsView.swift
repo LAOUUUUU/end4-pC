@@ -33,9 +33,11 @@ struct LyricsView: View {
             }
         }
         .padding(16)
-        .shadow(color: .black.opacity(0.6), radius: 3)
-        .animation(.easeOut(duration: 0.25), value: model.activeIndex)
         .frame(minWidth: 320, minHeight: 200, alignment: .topLeading)
+        // A dark backdrop keeps the white text readable on light wallpapers.
+        // The shell widget sits on the wallpaper with no backdrop, so this is a deliberate difference.
+        .background(RoundedRectangle(cornerRadius: 14).fill(.black.opacity(0.55)))
+        .animation(.easeOut(duration: 0.25), value: model.activeIndex)
     }
 
     private func message(_ text: String) -> some View {
