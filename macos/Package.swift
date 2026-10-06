@@ -12,16 +12,18 @@ let package = Package(
         .target(name: "SpotifyKit", dependencies: ["AudioVisualizer"]),
         .target(name: "AudioVisualizer"),
         .target(name: "Appearance"),
+        .target(name: "WidgetsCore"),
         .target(name: "AppleMusicKit", dependencies: ["SpotifyKit"]),
         .executableTarget(
             name: "EndLyrics",
-            dependencies: ["LyricsCore", "SpotifyKit", "AudioVisualizer", "Appearance", "AppleMusicKit"]
+            dependencies: ["LyricsCore", "SpotifyKit", "AudioVisualizer", "Appearance", "AppleMusicKit", "WidgetsCore"]
         ),
         .testTarget(name: "LyricsCoreTests", dependencies: ["LyricsCore"]),
         .testTarget(name: "SpotifyKitTests", dependencies: ["SpotifyKit"]),
         .testTarget(name: "AudioVisualizerTests", dependencies: ["AudioVisualizer"]),
         .testTarget(name: "AppearanceTests", dependencies: ["Appearance"]),
         .testTarget(name: "AppleMusicKitTests", dependencies: ["AppleMusicKit"]),
+        .testTarget(name: "WidgetsCoreTests", dependencies: ["WidgetsCore"]),
     ],
     swiftLanguageModes: [.v5]
 )

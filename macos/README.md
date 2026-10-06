@@ -46,6 +46,18 @@ The system menu bar at the top of the screen cannot be drawn in custom colours b
 
 The lyric window's corners are rounded, and its shadow follows the rounded shape.
 
+The full-screen menu has a widget column, ported from the shell's widgets:
+
+- **Clock and world clocks.** Local time with Tokyo, London, and New York underneath.
+- **CPU and memory.** Sampled every two seconds from Mach host statistics, like the shell's resources widget.
+- **Timer.** A 5, 15, 30, or 60 minute countdown. With "Pause music when it ends" on, it pauses playback when it reaches zero.
+- **Notes.** A free-text pad, saved between launches.
+- **To-do.** Add, tick off, and remove tasks, saved between launches.
+
+The columns size to the window, so the menu fits any screen size. Now Playing has its own button to return to the standard size.
+
+Not ported yet: the weather and calendar widgets, which need an outside weather service or calendar permission. The equalizer depends on EasyEffects, which is Linux-only.
+
 ### Saving lyrics
 
 **Lyrics → Save as .lrc…** writes the lyrics currently loaded, with `[ti:]` and `[ar:]` headers and `[mm:ss.cc]` timestamps. Turn on **Millisecond Timestamps** for `[mm:ss.mmm]`. **Save as .txt…** writes the lines without timestamps. The suggested file name is `Artist - Title.lrc`.

@@ -3,57 +3,67 @@ import LyricsCore
 import SwiftUI
 
 /// The full-screen main menu: the cover as the whole background, big lyrics and cover art on the left,
-/// and menu tiles on the right. Everything calls the same models and actions as the rest of the app.
+/// and widgets with menu tiles on the right. Columns are sized from the window, so it fits any screen.
 struct FullscreenMenuView: View {
     @ObservedObject var model: LyricsModel
     @ObservedObject var theme: ThemeModel
     @ObservedObject var visualizer: VisualizerModel
+    @ObservedObject var hub: WidgetHub
     let actions: MainMenuController
     let close: () -> Void
 
     var body: some View {
-        ZStack {
-            CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors)
-                .ignoresSafeArea()
-                .blur(radius: 0)
+        GeometryReader { geometry in
+            let margin: CGFloat = 40
+            let rightWidth = min(460, max(300, geometry.size.width * 0.34))
+            let lyricSize = min(30, max(16, geometry.size.height / 24))
 
-            HStack(alignment: .top, spacing: 40) {
-                nowPlayingColumn
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                tiles
-                    .frame(width: 520)
-            }
-            .padding(48)
+            ZStack(alignment: .topTrailing) {
+                CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors)
+                    .ignoresSafeArea()
 
-            VStack {
-                HStack {
-                    Spacer()
-                    Button(action: close) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.8))
-                            .frame(width: 34, height: 34)
-                            .background(Circle().fill(.white.opacity(0.12)))
+                HStack(alignment: .top, spacing: 32) {
+                    nowPlayingColumn(lyricSize: lyricSize)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 18) {
+                            WidgetsView(hub: hub, theme: theme)
+                            tiles
+                        }
+                        .padding(.bottom, 24)
                     }
-                    .buttonStyle(.plain)
-                    .keyboardShortcut(.cancelAction)
+                    .frame(width: rightWidth)
                 }
-                Spacer()
+                .padding(.horizontal, margin)
+                .padding(.top, 56)
+                .padding(.bottom, margin)
+
+                Button(action: close) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(.white.opacity(0.14)))
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
+                .padding(.top, 14)
+                .padding(.trailing, 18)
             }
-            .padding(20)
         }
         .foregroundStyle(.white)
     }
 
-    private var nowPlayingColumn: some View {
-        VStack(alignment: .leading, spacing: 18) {
+    private func nowPlayingColumn(lyricSize: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .bottom, spacing: 18) {
                 AsyncImage(url: model.artworkURL) { image in
                     image.resizable().scaledToFill()
                 } placeholder: {
                     RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.1))
                 }
-                .frame(width: 180, height: 180)
+                .frame(width: 160, height: 160)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
 
@@ -74,7 +84,7 @@ struct FullscreenMenuView: View {
                 }
             }
 
-            LyricsStack(model: model, theme: theme, font: 30)
+            LyricsStack(model: model, theme: theme, font: lyricSize)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             VStack(spacing: 12) {
@@ -87,7 +97,7 @@ struct FullscreenMenuView: View {
     }
 
     private var tiles: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
             tile("play.fill", "Play / Pause", "Space") { model.togglePlayPause() }
             tile("rectangle.expand.vertical", "Now Playing", model.expanded ? "On" : "Off") { model.expanded.toggle() }
             tile("square.and.arrow.down", "Save .lrc", "Timed lyrics") { actions.saveLRC() }
@@ -104,25 +114,25 @@ struct FullscreenMenuView: View {
             tile("hand.tap", "Click to Jump", theme.settings.clickToSeek ? "On" : "Off") {
                 theme.settings.clickToSeek.toggle()
             }
-            tile("gearshape", "Settings", "Player, colours, visualizer") { actions.settings() }
+            tile("gearshape", "Settings", "Player, colours, bars") { actions.settings() }
             tile("power", "Quit", "Close EndLyrics") { NSApp.terminate(nil) }
         }
     }
 
     private func tile(_ symbol: String, _ title: String, _ subtitle: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 Image(systemName: symbol)
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(theme.accent)
                 Spacer(minLength: 0)
-                Text(title).font(.system(size: 15, weight: .semibold))
-                Text(subtitle).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6))
+                Text(title).font(.system(size: 13, weight: .semibold))
+                Text(subtitle).font(.system(size: 10)).foregroundStyle(.white.opacity(0.6))
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
-            .background(RoundedRectangle(cornerRadius: 16).fill(.ultraThinMaterial))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.12)))
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: 14).fill(.ultraThinMaterial))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.12)))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

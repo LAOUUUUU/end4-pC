@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let model = LyricsModel()
     private let visualizer = VisualizerModel()
     private let theme = ThemeModel()
+    private let widgets = WidgetHub()
     private var panel: NSPanel?
     private var settingsWindow: NSWindow?
     private var statusItem: NSStatusItem?
@@ -67,7 +68,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         menu.install()
         mainMenu = menu
-        let fullscreen = FullscreenMenuController(model: model, theme: theme, visualizer: visualizer, actions: menu)
+        widgets.countdown.onFinish = { [weak self] in
+            guard let self, self.widgets.countdown.pausesMusic, self.model.isPlaying else { return }
+            self.model.togglePlayPause()
+        }
+        let fullscreen = FullscreenMenuController(model: model, theme: theme, visualizer: visualizer, hub: widgets, actions: menu)
         fullscreenMenu = fullscreen
         menu.openFullscreen = { fullscreen.show() }
         model.start()

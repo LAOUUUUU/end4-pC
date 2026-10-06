@@ -10,6 +10,21 @@ struct NowPlayingView: View {
 
     var body: some View {
         VStack(spacing: 12) {
+            HStack {
+                Spacer()
+                // Without this, the Now Playing layout had no button to return to the standard size.
+                Button {
+                    model.expanded.toggle()
+                } label: {
+                    Image(systemName: "arrow.down.right.and.arrow.up.left")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .frame(width: 26, height: 22)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(.white.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+                .help("Standard view (⌘E)")
+            }
             HStack(spacing: 14) {
                 AsyncImage(url: model.artworkURL) { image in
                     image.resizable().scaledToFill()

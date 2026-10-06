@@ -15,12 +15,14 @@ final class FullscreenMenuController {
     private let model: LyricsModel
     private let theme: ThemeModel
     private let visualizer: VisualizerModel
+    private let hub: WidgetHub
     private let actions: MainMenuController
 
-    init(model: LyricsModel, theme: ThemeModel, visualizer: VisualizerModel, actions: MainMenuController) {
+    init(model: LyricsModel, theme: ThemeModel, visualizer: VisualizerModel, hub: WidgetHub, actions: MainMenuController) {
         self.model = model
         self.theme = theme
         self.visualizer = visualizer
+        self.hub = hub
         self.actions = actions
     }
 
@@ -45,6 +47,7 @@ final class FullscreenMenuController {
             model: model,
             theme: theme,
             visualizer: visualizer,
+            hub: hub,
             actions: actions,
             close: { [weak window] in window?.close() }
         ))
