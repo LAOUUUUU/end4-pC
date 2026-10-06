@@ -45,7 +45,7 @@ struct PlaybackControlsView: View {
                 .frame(width: 26, height: 24)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(RippleButtonStyle(radius: 13))
     }
 
     private func toggle(_ symbol: String, on: Bool, action: @escaping () -> Void) -> some View {
@@ -56,7 +56,7 @@ struct PlaybackControlsView: View {
                 .frame(width: 24, height: 24)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(RippleButtonStyle(radius: 12, toggled: on, accent: theme.accent))
     }
 }
 

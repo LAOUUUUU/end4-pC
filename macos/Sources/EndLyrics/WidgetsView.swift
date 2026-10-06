@@ -83,7 +83,7 @@ struct WidgetsView: View {
                 HStack(spacing: 6) {
                     ForEach([5, 15, 30, 60], id: \.self) { minutes in
                         Button("\(minutes) min") { hub.countdown.start(minutes: minutes) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(RippleButtonStyle(radius: 12))
                             .font(.system(size: 11, weight: .medium))
                             .padding(.horizontal, 9)
                             .padding(.vertical, 5)

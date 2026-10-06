@@ -74,11 +74,10 @@ struct FullscreenMenuView: View {
         HStack(spacing: 4) {
             ForEach([(FullscreenPage.home, "Home"), (FullscreenPage.settings, "Settings")], id: \.1) { page, title in
                 Button(title) { navigator.page = page }
-                    .buttonStyle(.plain)
+                    .buttonStyle(RippleButtonStyle(radius: 12, toggled: navigator.page == page, accent: theme.accent))
                     .font(.system(size: 12, weight: .semibold))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Capsule().fill(navigator.page == page ? theme.accent.opacity(0.35) : .white.opacity(0.08)))
             }
         }
         .padding(4)
@@ -167,6 +166,6 @@ struct FullscreenMenuView: View {
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.12)))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(RippleButtonStyle(radius: 14))
     }
 }

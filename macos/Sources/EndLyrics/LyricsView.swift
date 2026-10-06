@@ -97,8 +97,6 @@ struct LyricsStack: View {
                 message("Can't read Spotify. Allow control under Privacy & Security > Automation.\n\(detail)")
             }
         }
-        .animation(.spring(response: 0.5, dampingFraction: 0.86), value: model.activeIndex)
-        .animation(.linear(duration: 0.12), value: model.lineProgress)
     }
 
     /// Only the lines near the active one are laid out. Each sits at its distance from the active line.
@@ -113,6 +111,8 @@ struct LyricsStack: View {
                     row(index: index, active: active)
                 }
             }
+            // Only the slide between lines is animated here. The sweep has its own, shorter animation.
+            .animation(.spring(response: 0.6, dampingFraction: 0.9), value: active)
             .frame(maxWidth: .infinity, minHeight: rowHeight * (compact ? 1 : 7), alignment: .topLeading)
             .clipped()
         } else {
@@ -139,7 +139,9 @@ struct LyricsStack: View {
             }
         }
         .opacity(visible ? opacity(distance: level) : 0)
-        .lineLimit(2)
+        // One line per row. Long lines shrink to fit the width instead of being cut off.
+        .lineLimit(1)
+        .minimumScaleFactor(0.45)
         .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
         .scaleEffect(isActive ? 1 : 0.96, anchor: .leading)
         // Rows sit one slot apart, the active line in the middle slot (slot 3 of 0...6).
@@ -190,6 +192,9 @@ struct KaraokeLine: View {
     var body: some View {
         let edge = min(1, max(0, progress))
         Text(text)
+            .lineLimit(1)
+            .minimumScaleFactor(0.45)
+            .animation(.linear(duration: 0.12), value: edge)
             .foregroundStyle(LinearGradient(
                 stops: [
                     .init(color: accent, location: max(0, edge - 0.04)),
