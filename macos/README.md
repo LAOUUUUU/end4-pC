@@ -33,10 +33,10 @@ cd macos
 swift test
 ```
 
-The unit tests run offline. To also run the live tests against LRCLIB:
+The unit tests run offline. To also run the live tests, which call LRCLIB and read whatever your Spotify is playing (read-only):
 
 ```bash
-ENDLYRICS_LIVE_TESTS=1 swift test --filter LRCLibLiveTests
+ENDLYRICS_LIVE_TESTS=1 swift test --filter 'LRCLibLiveTests|SpotifyBridgeLiveTests'
 ```
 
 ## Layout

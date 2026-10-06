@@ -10,6 +10,13 @@ struct LyricsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Self.lineSpacing) {
+            if let nowPlaying = model.nowPlaying {
+                Text(nowPlaying)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             switch model.status {
             case .synced:
                 ForEach(Array(model.slots.enumerated()), id: \.offset) { index, text in

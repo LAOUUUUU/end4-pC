@@ -23,6 +23,8 @@ final class LyricsModel: ObservableObject {
     static let leadSeconds = 0.15
 
     @Published private(set) var status: Status = .nothingPlaying
+    /// "Title — Artist" for the track Spotify reported last, or nil when nothing is playing.
+    @Published private(set) var nowPlaying: String?
     @Published private(set) var slots: [String] = Array(repeating: "", count: LyricsTimeline.total)
     @Published private(set) var activeIndex = -1
 
@@ -62,8 +64,10 @@ final class LyricsModel: ObservableObject {
             loadTask?.cancel()
             lines = []
             setActive(-1)
+            nowPlaying = nil
             status = .nothingPlaying
         case .success(let snapshot?):
+            nowPlaying = "\(snapshot.title) — \(snapshot.artist)"
             clock.resync(position: snapshot.position, playing: snapshot.state == .playing, at: Date())
             let afterError = status.isError
             if TrackChangePolicy.shouldLoad(previous: trackID, next: snapshot.trackID, afterError: afterError) {
