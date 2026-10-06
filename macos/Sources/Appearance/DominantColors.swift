@@ -2,8 +2,8 @@ import Foundation
 
 /// Picks the most common saturated colours from a set of pixels, for tinting the window from cover art.
 public enum DominantColors {
-    /// Buckets per channel when grouping similar colours.
-    private static let levels = 15.0
+    /// Steps per channel when grouping similar colours. Finer steps keep the colours closer to the cover.
+    private static let levels = 31.0
     /// Colours closer than this (Euclidean distance over RGB) count as the same colour.
     private static let minimumDistance = 0.25
 
@@ -48,7 +48,7 @@ public enum DominantColors {
         let r = Int((color.red * levels).rounded())
         let g = Int((color.green * levels).rounded())
         let b = Int((color.blue * levels).rounded())
-        return (r * 16 + g) * 16 + b
+        return (r * 32 + g) * 32 + b
     }
 }
 

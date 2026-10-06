@@ -6,7 +6,7 @@ import ImageIO
 /// Downloads a track's cover art, shrinks it to 32×32 and returns its dominant colours.
 /// The image itself is never shown, only the colours taken from it.
 enum ArtworkPalette {
-    private static let sampleSize = 32
+    private static let sampleSize = 48
 
     static func colors(from url: URL) async -> [RGB] {
         var request = URLRequest(url: url)
@@ -20,7 +20,7 @@ enum ArtworkPalette {
               ] as CFDictionary)
         else { return [] }
 
-        return DominantColors.pick(from: pixels(of: thumbnail), count: 3)
+        return DominantColors.pick(from: pixels(of: thumbnail), count: 4)
     }
 
     private static func pixels(of image: CGImage) -> [RGB] {

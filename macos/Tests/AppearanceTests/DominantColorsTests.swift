@@ -78,3 +78,31 @@ final class AccentTests: XCTestCase {
         XCTAssertNil(DominantColors.accent(from: []))
     }
 }
+
+final class PaletteFidelityTests: XCTestCase {
+    func testSingleColourComesBackAccurately() throws {
+        let teal = RGB(red: 0.2, green: 0.6, blue: 0.55)
+
+        let first = try XCTUnwrap(DominantColors.pick(from: Array(repeating: teal, count: 50), count: 1).first)
+
+        XCTAssertEqual(first.red, teal.red, accuracy: 0.02)
+        XCTAssertEqual(first.green, teal.green, accuracy: 0.02)
+        XCTAssertEqual(first.blue, teal.blue, accuracy: 0.02)
+    }
+
+    func testReturnsFourColoursInOrderOfProminence() {
+        let a = RGB(red: 0.9, green: 0.1, blue: 0.1)
+        let b = RGB(red: 0.1, green: 0.9, blue: 0.1)
+        let c = RGB(red: 0.1, green: 0.1, blue: 0.9)
+        let d = RGB(red: 0.9, green: 0.8, blue: 0.1)
+        let pixels = Array(repeating: a, count: 40) + Array(repeating: b, count: 30)
+            + Array(repeating: c, count: 20) + Array(repeating: d, count: 10)
+
+        let colors = DominantColors.pick(from: pixels, count: 4)
+
+        XCTAssertEqual(colors.count, 4)
+        XCTAssertEqual(colors[0].red, 0.9, accuracy: 0.05)
+        XCTAssertEqual(colors[3].red, 0.9, accuracy: 0.05)
+        XCTAssertEqual(colors[3].green, 0.8, accuracy: 0.05)
+    }
+}

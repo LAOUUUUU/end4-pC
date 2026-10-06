@@ -3,6 +3,26 @@ import Appearance
 import Combine
 import SwiftUI
 
+/// Switches between the standard panel and the Now Playing layout.
+struct PanelRoot: View {
+    @ObservedObject var model: LyricsModel
+    @ObservedObject var visualizer: VisualizerModel
+    @ObservedObject var theme: ThemeModel
+
+    var body: some View {
+        Group {
+            if model.expanded {
+                NowPlayingView(model: model, visualizer: visualizer, theme: theme)
+            } else {
+                LyricsView(model: model, visualizer: visualizer, theme: theme)
+            }
+        }
+        .padding(0)
+        .frame(width: model.expanded ? 420 : 360, height: model.expanded ? 560 : 330, alignment: .topLeading)
+        .animation(.easeInOut(duration: 0.3), value: model.expanded)
+    }
+}
+
 /// Owns the floating lyrics panel, the settings window, and the menu-bar item. Runs as an accessory app: no Dock icon.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -14,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var toggleItem: NSMenuItem?
     private var offsetSubscription: AnyCancellable?
+    private var expandSubscription: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -26,10 +47,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .removeDuplicates()
             .sink { [weak self] offset in self?.model.offsetSeconds = offset }
         model.start()
+        expandSubscription = model.$expanded.dropFirst().sink { [weak self] expanded in
+            self?.resizePanel(expanded: expanded)
+        }
+    }
+
+    /// Grows or shrinks the panel around its top-left corner, animated, so the drag position stays put.
+    private func resizePanel(expanded: Bool) {
+        guard let panel else { return }
+        let size = NSSize(width: expanded ? 420 : 360, height: expanded ? 560 : 330)
+        var frame = panel.frame
+        frame.origin.y += frame.height - size.height
+        frame.size = size
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.3
+            panel.animator().setFrame(frame, display: true)
+        }
     }
 
     private func makePanel() {
-        let content = NSHostingView(rootView: LyricsView(model: model, visualizer: visualizer, theme: theme))
+        let content = NSHostingView(rootView: PanelRoot(model: model, visualizer: visualizer, theme: theme))
+        // The window keeps the size we give it. Content changes must not resize it, or dragging stutters.
+        content.sizingOptions = []
         // Top-left of the main screen, just below the menu bar, so it is easy to find.
         let area = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
         let size = NSSize(width: 360, height: 330)

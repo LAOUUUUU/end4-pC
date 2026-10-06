@@ -58,11 +58,26 @@ struct PlaybackControlsView: View {
         HStack(spacing: 18) {
             toggle("shuffle", on: model.shuffling) { model.toggleShuffle() }
             control("backward.fill", .previous)
-            control("playpause.fill", .playPause)
+            playPause
             control("forward.fill", .next)
             toggle("repeat", on: model.repeating) { model.toggleRepeat() }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// Play and pause share one button. The icon morphs between the two states.
+    private var playPause: some View {
+        Button {
+            model.togglePlayPause()
+        } label: {
+            Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.95))
+                .frame(width: 30, height: 26)
+                .contentTransition(.symbolEffect(.replace))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func control(_ symbol: String, _ command: SpotifyCommand) -> some View {
@@ -104,5 +119,29 @@ struct ProgressBarView: View {
             }
         }
         .frame(height: 3)
+    }
+}
+
+/// Volume from 0 to 100. The level is sent to Spotify when the drag ends.
+struct VolumeSliderView: View {
+    @ObservedObject var model: LyricsModel
+    @ObservedObject var theme: ThemeModel
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "speaker.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(.white.opacity(0.5))
+            Slider(value: $model.volume, in: 0...100) { editing in
+                model.volumeEditing = editing
+                if !editing {
+                    model.setVolume(model.volume)
+                }
+            }
+            .tint(theme.accent)
+            Image(systemName: "speaker.wave.3.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(.white.opacity(0.5))
+        }
     }
 }

@@ -2,8 +2,8 @@ import Appearance
 import LyricsCore
 import SwiftUI
 
-/// Seven-line lyrics display. Sizes and opacities match `modules/common/widgets/Lyrics.qml`:
-/// the active line is largest and fully opaque, its neighbours step down.
+/// The standard panel: header, bars, seven lines of lyrics, progress, volume and controls.
+/// Sizes and opacities of the lines match `modules/common/widgets/Lyrics.qml`.
 struct LyricsView: View {
     @ObservedObject var model: LyricsModel
     @ObservedObject var visualizer: VisualizerModel
@@ -14,20 +14,73 @@ struct LyricsView: View {
     var body: some View {
         let settings = theme.settings
         VStack(alignment: .leading, spacing: Self.lineSpacing) {
-            if let nowPlaying = model.nowPlaying {
-                Text(model.providerName.map { "\(nowPlaying) · \($0)" } ?? nowPlaying)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 8) {
+                header
+                expandButton
             }
             if !settings.compactMode {
                 VisualizerView(model: visualizer, theme: theme)
             }
+            LyricsStack(model: model, theme: theme, font: 16, compact: settings.compactMode)
+            if !settings.compactMode {
+                ProgressBarView(fraction: model.progress, accent: theme.accent)
+                VolumeSliderView(model: model, theme: theme)
+                PlaybackControlsView(model: model, theme: theme)
+            }
+        }
+        .padding(16)
+        .frame(minWidth: 320, minHeight: 200, alignment: .topLeading)
+        .background(backdrop)
+    }
+
+    @ViewBuilder
+    private var header: some View {
+        if let nowPlaying = model.nowPlaying {
+            Text(model.providerName.map { "\(nowPlaying) · \($0)" } ?? nowPlaying)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.white.opacity(0.55))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var expandButton: some View {
+        Button {
+            model.expanded.toggle()
+        } label: {
+            Image(systemName: model.expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.6))
+                .frame(width: 20, height: 20)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(model.expanded ? "Standard view" : "Now Playing view")
+    }
+
+    /// Dark glass, with a wash of the cover's colours behind it.
+    private var backdrop: some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(LinearGradient(colors: theme.backgroundColors, startPoint: .top, endPoint: .bottom))
+    }
+}
+
+/// The seven visible lines, or the status message in their place. Line changes animate.
+struct LyricsStack: View {
+    @ObservedObject var model: LyricsModel
+    @ObservedObject var theme: ThemeModel
+    /// Font size of the active line. The other lines scale from it.
+    let font: CGFloat
+    var compact = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
             switch model.status {
             case .synced:
                 ForEach(Array(model.slots.enumerated()), id: \.offset) { index, text in
-                    lyricLine(index: index, text: text, settings: settings)
+                    lyricLine(index: index, text: text)
                 }
             case .loading:
                 ProgressView()
@@ -40,51 +93,37 @@ struct LyricsView: View {
             case .error(let detail):
                 message("Can't read Spotify. Allow control under Privacy & Security > Automation.\n\(detail)")
             }
-            if !settings.compactMode {
-                ProgressBarView(fraction: model.progress, accent: theme.accent)
-                PlaybackControlsView(model: model, theme: theme)
-            }
         }
-        .padding(16)
-        .frame(minWidth: 320, minHeight: 200, alignment: .topLeading)
-        .background(backdrop)
-        .animation(.easeOut(duration: 0.25), value: model.activeIndex)
+        .animation(.spring(response: 0.45, dampingFraction: 0.85), value: model.activeIndex)
     }
 
     @ViewBuilder
-    private func lyricLine(index: Int, text: String, settings: AppSettings) -> some View {
-        let distance = Self.distance(index)
-        if !settings.compactMode || distance == 0 {
+    private func lyricLine(index: Int, text: String) -> some View {
+        let distance = abs(index - LyricsTimeline.before)
+        if !compact || distance == 0 {
             Group {
                 if index == LyricsTimeline.before, !model.activeWords.isEmpty {
                     KaraokeLine(words: model.activeWords, highlighted: model.highlightedWord, accent: theme.accent)
-                        .font(.system(size: Self.fontSize(distance: 0)))
+                        .font(.system(size: font))
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
                 } else {
                     Text(text)
-                        .font(.system(size: Self.fontSize(distance: distance)))
-                        .opacity(Self.opacity(distance: distance))
+                        .font(.system(size: size(distance: distance)))
+                        .opacity(opacity(distance: distance))
                         .foregroundStyle(.white)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
+            .id("\(index)-\(text)")
             .lineLimit(2)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                if settings.clickToSeek, !text.isEmpty {
+                if theme.settings.clickToSeek, !text.isEmpty {
                     model.seek(toSlot: index)
                 }
             }
         }
-    }
-
-    /// Dark glass, with a faint wash of the accent colour at the top.
-    private var backdrop: some View {
-        RoundedRectangle(cornerRadius: 14)
-            .fill(.black.opacity(0.55))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(LinearGradient(colors: [theme.accent.opacity(0.22), .clear], startPoint: .top, endPoint: .bottom))
-            )
     }
 
     private func message(_ text: String) -> some View {
@@ -95,22 +134,17 @@ struct LyricsView: View {
             .multilineTextAlignment(.center)
     }
 
-    /// Distance from the active slot: 0 for the active line, then 1, 2, 3.
-    private static func distance(_ index: Int) -> Int {
-        abs(index - LyricsTimeline.before)
-    }
-
-    /// 16 pt active, 15 pt next, 12 pt beyond, as in `Appearance.font.pixelSize`.
-    private static func fontSize(distance: Int) -> CGFloat {
+    /// Active line at `font`, then 0.94× and 0.75× for the next lines, 0.6× beyond. The standard panel's 16/15/12 pt.
+    private func size(distance: Int) -> CGFloat {
         switch distance {
-        case 0: return 16
-        case 1: return 15
-        default: return 12
+        case 0: return font
+        case 1: return font * 0.94
+        default: return font * 0.75
         }
     }
 
     /// Opacities from `Lyrics.qml`: 1.0, 0.6, 0.35, then 0.15.
-    private static func opacity(distance: Int) -> Double {
+    private func opacity(distance: Int) -> Double {
         switch distance {
         case 0: return 1.0
         case 1: return 0.6

@@ -21,6 +21,12 @@ final class ThemeModel: ObservableObject {
         settings = Self.load()
     }
 
+    /// Colours for the window background, top to bottom, following the cover's palette.
+    var backgroundColors: [Color] {
+        let source = palette.isEmpty ? [Self.fallbackAccent] : palette
+        return source.map { Color(rgb: $0).opacity(0.35) } + [.black.opacity(0.55)]
+    }
+
     /// The colour used for the bars and the sung words.
     var accent: Color {
         Color(rgb: accentRGB)

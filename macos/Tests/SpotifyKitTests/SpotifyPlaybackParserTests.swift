@@ -14,9 +14,10 @@ final class SpotifyPlaybackParserTests: XCTestCase {
         state: String = "playing",
         artwork: String = "https://i.scdn.co/image/ab67616d0000b273",
         shuffling: String = "false",
-        repeating: String = "true"
+        repeating: String = "true",
+        volume: String = "70"
     ) -> String {
-        [id, title, artist, album, duration, position, state, artwork, shuffling, repeating].joined(separator: sep)
+        [id, title, artist, album, duration, position, state, artwork, shuffling, repeating, volume].joined(separator: sep)
     }
 
     func testParsesPlayingTrack() throws {
@@ -70,6 +71,16 @@ final class SpotifyPlaybackParserTests: XCTestCase {
 
         XCTAssertTrue(snapshot.shuffling)
         XCTAssertFalse(snapshot.repeating)
+    }
+
+    func testParsesVolume() throws {
+        XCTAssertEqual(try XCTUnwrap(SpotifyPlaybackParser.parse(line(volume: "35"))).volume, 35)
+    }
+
+    func testTenFieldOutputFromOlderScriptIsRejected() {
+        let tenFields = ["id", "title", "artist", "album", "1000", "1", "playing", "https://x", "false", "false"].joined(separator: sep)
+
+        XCTAssertNil(SpotifyPlaybackParser.parse(tenFields))
     }
 
     func testEightFieldOutputFromOlderScriptIsRejected() {

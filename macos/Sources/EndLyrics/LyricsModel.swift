@@ -28,8 +28,10 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var nowPlaying: String?
     /// True while Spotify reports the playing state. The visualizer taps audio only then.
     @Published private(set) var isPlaying = false
-    /// Cover art URL of the current track, used only for colours.
+    /// Cover art URL of the current track. Shown only in the Now Playing view, with attribution.
     @Published private(set) var artworkURL: URL?
+    /// Link to the current track on Spotify, for the attribution link.
+    @Published private(set) var spotifyTrackURL: URL?
     /// Seconds added to the playback position when choosing the lyric line (from settings).
     var offsetSeconds = 0.0
     /// Playback state from Spotify, shown on the shuffle and repeat buttons.
@@ -37,6 +39,10 @@ final class LyricsModel: ObservableObject {
     @Published private(set) var repeating = false
     /// 0...1 through the current track, updated while it plays.
     @Published private(set) var progress = 0.0
+    /// Spotify's output volume, 0...100.
+    @Published var volume: Double = 0
+    /// Now Playing view (cover, large lyrics) instead of the standard panel.
+    @Published var expanded = false
     private var trackDuration = 0.0
     @Published private(set) var slots: [String] = Array(repeating: "", count: LyricsTimeline.total)
     @Published private(set) var activeIndex = -1
@@ -95,12 +101,15 @@ final class LyricsModel: ObservableObject {
             isPlaying = snapshot.state == .playing
             shuffling = snapshot.shuffling
             repeating = snapshot.repeating
+            if !volumeEditing { volume = Double(snapshot.volume) }
             trackDuration = snapshot.duration
             clock.resync(position: snapshot.position, playing: snapshot.state == .playing, at: Date())
             let afterError = status.isError
             if TrackChangePolicy.shouldLoad(previous: trackID, next: snapshot.trackID, afterError: afterError) {
                 trackID = snapshot.trackID
                 artworkURL = snapshot.artworkURL
+                let id = snapshot.trackID.split(separator: ":").last.map(String.init) ?? ""
+                spotifyTrackURL = id.isEmpty ? nil : URL(string: "https://open.spotify.com/track/\(id)")
                 startLoading(snapshot)
             }
         }
@@ -148,6 +157,20 @@ final class LyricsModel: ObservableObject {
         if abs(fraction - progress) > 0.002 { progress = fraction }
         let word = WordTiming.activeWordIndex(in: activeWords, at: position)
         if word != highlightedWord { highlightedWord = word }
+    }
+
+    /// True while the user drags the volume slider, so polls do not fight the drag.
+    var volumeEditing = false
+
+    func setVolume(_ level: Double) {
+        volume = level
+        let value = Int(level.rounded())
+        Task { await SpotifyVolume.send(value) }
+    }
+
+    func togglePlayPause() {
+        isPlaying.toggle()
+        Task { await SpotifyCommand.playPause.send() }
     }
 
     func toggleShuffle() {
