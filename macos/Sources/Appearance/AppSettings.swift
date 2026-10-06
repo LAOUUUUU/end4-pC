@@ -14,6 +14,14 @@ public enum VisualizerStyle: String, Codable, CaseIterable, Sendable {
     case bars
     /// The same bars reflected around the centre.
     case mirror
+    /// Columns of dots, lit up to the level.
+    case dots
+    /// A smooth line through the band levels.
+    case wave
+    /// Bars arranged around a circle.
+    case radial
+    /// Stacked LED-style blocks.
+    case blocks
 }
 
 /// Which music app the window follows.
@@ -28,6 +36,8 @@ public enum PlayerChoice: String, Codable, CaseIterable, Sendable {
 public struct AppSettings: Codable, Equatable, Sendable {
     public static let barCountChoices = [12, 16, 24, 32]
     public static let offsetRange: ClosedRange<Double> = -3...3
+    public static let lyricScaleRange: ClosedRange<Double> = 0.8...1.5
+    public static let blurRange: ClosedRange<Double> = 0...80
 
     public var barCount = 24
     public var style: VisualizerStyle = .bars
@@ -39,6 +49,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var lyricOffset = 0.0
     public var compactMode = false
     public var clickToSeek = true
+    /// Multiplier on the lyric font sizes.
+    public var lyricScale = 1.0
+    /// Blur radius of the cover behind the window.
+    public var backgroundBlur = 40.0
 
     public init() {}
 
@@ -47,6 +61,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         var copy = self
         copy.barCount = Self.barCountChoices.min { abs($0 - barCount) < abs($1 - barCount) } ?? 24
         copy.lyricOffset = min(max(lyricOffset, Self.offsetRange.lowerBound), Self.offsetRange.upperBound)
+        copy.lyricScale = min(max(lyricScale, Self.lyricScaleRange.lowerBound), Self.lyricScaleRange.upperBound)
+        copy.backgroundBlur = min(max(backgroundBlur, Self.blurRange.lowerBound), Self.blurRange.upperBound)
         return copy
     }
 }

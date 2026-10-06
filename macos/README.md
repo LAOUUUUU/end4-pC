@@ -74,11 +74,13 @@ The window follows **Spotify**, **Apple Music**, or **whichever is playing** (Se
 
 ### Settings
 
-Open the menu-bar ♪ item and choose **Settings…** (⌘,).
+Settings is a page inside the full-screen main menu. Open it from ♪ or ⌘, and switch between **Home** and **Settings** at the top. There are no separate windows.
+
+The lyric size and the cover blur are settings too. **Copy Current Lyric** (⌥⌘C) copies the line being sung.
 
 | Setting | What it does |
 |---|---|
-| Style | **Bars** (rising from the bottom) or **Mirror** (the same bars reflected around the centre). |
+| Style | **Bars**, **Mirror** (reflected around the centre), **Dots** (columns of dots), **Wave** (a smooth line), **Radial** (bars around a circle), or **LED blocks**. |
 | Bars | 12, 16, 24, or 32 bars. The analyser always works in 32 bands and averages them down. |
 | Show peak caps | Shows or hides the falling caps above the bars. |
 | Take colours from | **Album cover** (default) or **A solid colour**, which you pick. |

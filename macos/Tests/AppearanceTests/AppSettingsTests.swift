@@ -74,3 +74,27 @@ final class PlayerChoiceSettingTests: XCTestCase {
         XCTAssertEqual(decoded.player, .appleMusic)
     }
 }
+
+final class MoreSettingsTests: XCTestCase {
+    func testAllVisualizerStylesAreOffered() {
+        XCTAssertEqual(VisualizerStyle.allCases, [.bars, .mirror, .dots, .wave, .radial, .blocks])
+    }
+
+    func testLyricScaleIsClampedAndDefaultsToOne() {
+        XCTAssertEqual(AppSettings().lyricScale, 1)
+        var settings = AppSettings()
+        settings.lyricScale = 9
+        XCTAssertEqual(settings.normalized().lyricScale, 1.5)
+        settings.lyricScale = 0
+        XCTAssertEqual(settings.normalized().lyricScale, 0.8)
+    }
+
+    func testBackgroundBlurIsClamped() {
+        XCTAssertEqual(AppSettings().backgroundBlur, 40)
+        var settings = AppSettings()
+        settings.backgroundBlur = 500
+        XCTAssertEqual(settings.normalized().backgroundBlur, 80)
+        settings.backgroundBlur = -4
+        XCTAssertEqual(settings.normalized().backgroundBlur, 0)
+    }
+}

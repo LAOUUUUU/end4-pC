@@ -21,7 +21,7 @@ struct LyricsView: View {
             if !settings.compactMode {
                 VisualizerView(model: visualizer, theme: theme)
             }
-            LyricsStack(model: model, theme: theme, font: 16, compact: settings.compactMode)
+            LyricsStack(model: model, theme: theme, baseFont: 16, compact: settings.compactMode)
             if !settings.compactMode {
                 ProgressBarView(fraction: model.progress, accent: theme.accent)
                 VolumeSliderView(model: model, theme: theme)
@@ -62,7 +62,7 @@ struct LyricsView: View {
 
     /// The cover, blurred, behind a gradient of its colours.
     private var backdrop: some View {
-        CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors)
+        CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur)
     }
 }
 
@@ -70,9 +70,11 @@ struct LyricsView: View {
 struct LyricsStack: View {
     @ObservedObject var model: LyricsModel
     @ObservedObject var theme: ThemeModel
-    /// Font size of the active line. The other lines scale from it.
-    let font: CGFloat
+    /// Font size of the active line, before the lyric-size setting. The other lines scale from it.
+    let baseFont: CGFloat
     var compact = false
+
+    private var font: CGFloat { baseFont * CGFloat(theme.settings.lyricScale) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

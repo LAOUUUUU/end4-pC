@@ -10,15 +10,13 @@ import SwiftUI
 final class MainMenuController: NSObject {
     let model: LyricsModel
     let theme: ThemeModel
-    private let showSettings: () -> Void
     private let togglePanel: () -> Void
     /// Opens the full-screen main menu. Set by the app delegate.
     var openFullscreen: (() -> Void)?
 
-    init(model: LyricsModel, theme: ThemeModel, showSettings: @escaping () -> Void, togglePanel: @escaping () -> Void) {
+    init(model: LyricsModel, theme: ThemeModel, togglePanel: @escaping () -> Void) {
         self.model = model
         self.theme = theme
-        self.showSettings = showSettings
         self.togglePanel = togglePanel
     }
 
@@ -60,6 +58,7 @@ final class MainMenuController: NSObject {
             item("Reset Timing", #selector(offsetReset), key: "0"),
             .separator(),
             item("Click a Line to Jump", #selector(toggleClickToSeek)),
+            item("Copy Current Lyric", #selector(copyCurrentLyric), key: "c", modifiers: [.command, .option]),
         ]))
         main.addItem(submenu(title: "Window", items: [
             item("Minimize", #selector(minimize), key: "m"),
@@ -162,7 +161,17 @@ final class MainMenuController: NSObject {
     // MARK: - Window and help
 
     @objc func about() { NSApp.orderFrontStandardAboutPanel(nil) }
-    @objc func settings() { showSettings() }
+    /// Opens Settings as a page in the full-screen menu. Set by the app delegate.
+    var openSettings: (() -> Void)?
+
+    @objc func settings() { openSettings?() }
+
+    @objc func copyCurrentLyric() {
+        let line = model.currentLineText
+        guard !line.isEmpty else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(line, forType: .string)
+    }
     @objc func minimize() { NSApp.keyWindow?.miniaturize(nil) }
     @objc func closeWindow() { NSApp.keyWindow?.performClose(nil) }
 

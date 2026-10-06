@@ -31,6 +31,8 @@ final class LyricsModel: ObservableObject {
     /// Title and artist of the current track, for file names and the LRC header.
     @Published private(set) var trackTitle: String?
     @Published private(set) var trackArtist: String?
+    /// The lyric line being sung, for copying.
+    var currentLineText: String { slots[LyricsTimeline.before] }
     /// The lyric lines currently loaded, for export.
     var loadedLines: [LyricLine] { lines }
 

@@ -9,6 +9,7 @@ struct FullscreenMenuView: View {
     @ObservedObject var theme: ThemeModel
     @ObservedObject var visualizer: VisualizerModel
     @ObservedObject var hub: WidgetHub
+    @ObservedObject var navigator: FullscreenNavigator
     let actions: MainMenuController
     let close: () -> Void
 
@@ -22,37 +23,66 @@ struct FullscreenMenuView: View {
                 CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors)
                     .ignoresSafeArea()
 
-                HStack(alignment: .top, spacing: 32) {
-                    nowPlayingColumn(lyricSize: lyricSize)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-
+                Group {
+                if navigator.page == .settings {
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 18) {
-                            WidgetsView(hub: hub, theme: theme)
-                            tiles
-                        }
-                        .padding(.bottom, 24)
+                        SettingsView(theme: theme)
+                            .frame(maxWidth: 640, alignment: .leading)
+                            .padding(.bottom, 24)
                     }
-                    .frame(width: rightWidth)
+                } else {
+                    HStack(alignment: .top, spacing: 32) {
+                        nowPlayingColumn(lyricSize: lyricSize)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 18) {
+                                WidgetsView(hub: hub, theme: theme)
+                                tiles
+                            }
+                            .padding(.bottom, 24)
+                        }
+                        .frame(width: rightWidth)
+                    }
+                }
                 }
                 .padding(.horizontal, margin)
                 .padding(.top, 56)
                 .padding(.bottom, margin)
 
-                Button(action: close) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .frame(width: 32, height: 32)
-                        .background(Circle().fill(.white.opacity(0.14)))
+                HStack(spacing: 10) {
+                    pageSwitch
+                    Button(action: close) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.85))
+                            .frame(width: 32, height: 32)
+                            .background(Circle().fill(.white.opacity(0.14)))
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
                 }
-                .buttonStyle(.plain)
-                .keyboardShortcut(.cancelAction)
                 .padding(.top, 14)
                 .padding(.trailing, 18)
             }
         }
         .foregroundStyle(.white)
+    }
+
+    /// Home and Settings, shown in the same window.
+    private var pageSwitch: some View {
+        HStack(spacing: 4) {
+            ForEach([(FullscreenPage.home, "Home"), (FullscreenPage.settings, "Settings")], id: \.1) { page, title in
+                Button(title) { navigator.page = page }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 12, weight: .semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(navigator.page == page ? theme.accent.opacity(0.35) : .white.opacity(0.08)))
+            }
+        }
+        .padding(4)
+        .background(Capsule().fill(.black.opacity(0.25)))
     }
 
     private func nowPlayingColumn(lyricSize: CGFloat) -> some View {
@@ -84,12 +114,12 @@ struct FullscreenMenuView: View {
                 }
             }
 
-            LyricsStack(model: model, theme: theme, font: lyricSize)
+            LyricsStack(model: model, theme: theme, baseFont: lyricSize)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             VStack(spacing: 12) {
                 ProgressBarView(fraction: model.progress, accent: theme.accent) { model.seek(toFraction: $0) }
-                VisualizerView(model: visualizer, theme: theme)
+                VisualizerView(model: visualizer, theme: theme, height: 56)
                 VolumeSliderView(model: model, theme: theme)
                 PlaybackControlsView(model: model, theme: theme)
             }
@@ -114,7 +144,8 @@ struct FullscreenMenuView: View {
             tile("hand.tap", "Click to Jump", theme.settings.clickToSeek ? "On" : "Off") {
                 theme.settings.clickToSeek.toggle()
             }
-            tile("gearshape", "Settings", "Player, colours, bars") { actions.settings() }
+            tile("gearshape", "Settings", "Player, colours, bars") { navigator.page = .settings }
+            tile("doc.on.doc", "Copy Lyric", "Current line") { actions.copyCurrentLyric() }
             tile("power", "Quit", "Close EndLyrics") { NSApp.terminate(nil) }
         }
     }

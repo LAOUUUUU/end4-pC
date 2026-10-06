@@ -31,7 +31,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let theme = ThemeModel()
     private let widgets = WidgetHub()
     private var panel: NSPanel?
-    private var settingsWindow: NSWindow?
     private var statusItem: NSStatusItem?
     private var toggleItem: NSMenuItem?
     private var offsetSubscription: AnyCancellable?
@@ -63,7 +62,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = MainMenuController(
             model: model,
             theme: theme,
-            showSettings: { [weak self] in self?.showSettings() },
             togglePanel: { [weak self] in self?.togglePanel() }
         )
         menu.install()
@@ -75,6 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let fullscreen = FullscreenMenuController(model: model, theme: theme, visualizer: visualizer, hub: widgets, actions: menu)
         fullscreenMenu = fullscreen
         menu.openFullscreen = { fullscreen.show() }
+        menu.openSettings = { fullscreen.show(page: .settings) }
         model.start()
         expandSubscription = model.$expanded.dropFirst().sink { [weak self] expanded in
             self?.resizePanel(expanded: expanded)
@@ -165,21 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showSettings() {
-        if settingsWindow == nil {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 420, height: 520),
-                styleMask: [.titled, .closable],
-                backing: .buffered,
-                defer: false
-            )
-            window.title = "EndLyrics Settings"
-            window.contentView = NSHostingView(rootView: SettingsView(theme: theme))
-            window.isReleasedWhenClosed = false
-            window.center()
-            settingsWindow = window
-        }
-        NSApp.activate(ignoringOtherApps: true)
-        settingsWindow?.makeKeyAndOrderFront(nil)
+        fullscreenMenu?.show(page: .settings)
     }
 }
 

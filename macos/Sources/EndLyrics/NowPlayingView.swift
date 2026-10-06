@@ -52,7 +52,7 @@ struct NowPlayingView: View {
 
             VisualizerView(model: visualizer, theme: theme)
             ProgressBarView(fraction: model.progress, accent: theme.accent) { model.seek(toFraction: $0) }
-            LyricsStack(model: model, theme: theme, font: 20)
+            LyricsStack(model: model, theme: theme, baseFont: 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             VolumeSliderView(model: model, theme: theme)
             PlaybackControlsView(model: model, theme: theme)
@@ -60,7 +60,7 @@ struct NowPlayingView: View {
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Without a backdrop, the white text sits on whatever is behind the panel and disappears.
-        .background(CoverBackdrop(url: model.artworkURL, colors: theme.backgroundColors))
+        .background(CoverBackdrop(url: model.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur))
     }
 }
 
@@ -69,11 +69,12 @@ struct NowPlayingView: View {
 struct CoverBackdrop: View {
     let url: URL?
     let colors: [Color]
+    var blur: Double = 40
 
     var body: some View {
         ZStack {
             AsyncImage(url: url) { image in
-                image.resizable().scaledToFill().blur(radius: 40).opacity(0.5)
+                image.resizable().scaledToFill().blur(radius: blur).opacity(0.5)
             } placeholder: {
                 Color.clear
             }

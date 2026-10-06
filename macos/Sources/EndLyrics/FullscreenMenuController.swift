@@ -8,10 +8,22 @@ final class EscapableWindow: NSWindow {
     }
 }
 
+/// Which page the full-screen menu shows.
+enum FullscreenPage: Equatable {
+    case home
+    case settings
+}
+
+/// Holds the page, so Settings can be opened straight into the full-screen window.
+final class FullscreenNavigator: ObservableObject {
+    @Published var page: FullscreenPage = .home
+}
+
 /// Opens the full-screen main menu as a real macOS full-screen window in its own Space.
 @MainActor
 final class FullscreenMenuController {
     private var window: NSWindow?
+    let navigator = FullscreenNavigator()
     private let model: LyricsModel
     private let theme: ThemeModel
     private let visualizer: VisualizerModel
@@ -26,7 +38,8 @@ final class FullscreenMenuController {
         self.actions = actions
     }
 
-    func show() {
+    func show(page: FullscreenPage = .home) {
+        navigator.page = page
         if let window {
             window.makeKeyAndOrderFront(nil)
             return
@@ -48,6 +61,7 @@ final class FullscreenMenuController {
             theme: theme,
             visualizer: visualizer,
             hub: hub,
+            navigator: navigator,
             actions: actions,
             close: { [weak window] in window?.close() }
         ))
