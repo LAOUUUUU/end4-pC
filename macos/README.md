@@ -26,7 +26,7 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 
 1. **Playback.** Every second, EndLyrics runs a read-only AppleScript through `osascript` that asks Spotify for the current track and playback position. It never sends play, pause, or skip commands.
 2. **Lyrics.** For each new track it looks up synced lyrics on [LRCLIB](https://lrclib.net), a free public API. It tries three lookups in order and accepts the first result whose title and artist match. Results are cached under `~/Library/Caches/EndLyrics/lyrics`, so a replayed track does not hit the network again.
-3. **Scrolling lyrics.** The lines slide up or down on a spring as the song moves on. Each line keeps its place in the song, so the column scrolls instead of swapping text. Click any visible line to jump there. **Display.** Between polls, a local clock estimates the position so the active line advances smoothly. The window shows seven lines: the active line in the middle, three before it, and three after it. Sizes and opacities match the shell's lyrics widget.
+3. **Scrolling lyrics.** Each line is one line of text; long lines shrink to fit the width.  The lines slide up or down on a spring as the song moves on. Each line keeps its place in the song, so the column scrolls instead of swapping text. Click any visible line to jump there. **Display.** Between polls, a local clock estimates the position so the active line advances smoothly. The window shows seven lines: the active line in the middle, three before it, and three after it. Sizes and opacities match the shell's lyrics widget.
 4. **Karaoke highlight.** The active line is highlighted word by word. LRCLIB gives timestamps only per line, so each line's time is shared across its words by length. This is an estimate, not measured word timing.
 5. **Visualizer.** A Core Audio process tap captures only Spotify's audio (the tap is unmuted, so playback is not affected). It is active only while Spotify is playing. The audio is split into 24 log-spaced bands with an FFT.
 6. **Playback buttons.** Shuffle, previous, play/pause, next, and repeat. Each sends one AppleScript command and checks that Spotify is running first, so a click never launches it. Shuffle and repeat show their current state from Spotify, in the accent colour. A thin bar under the title shows how far through the track playback is.
@@ -37,6 +37,10 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 8. **Click a line to jump.** Clicking a lyric line moves Spotify to that line's start time. This changes the playback position, so it only happens on a click.
 12. **Seek bar.** Click or drag the progress bar to move to that point in the track. This is ported from the shell's media controls.
 13. **Blurred cover background.** The Now Playing view puts the cover behind its gradient, blurred and faded, as the shell's media widget does.
+
+### Buttons
+
+Buttons are Material-style, ported from the shell's ripple button: a flash from the press, a tint on hover, corners that tighten while pressed, and an accent fill when toggled on.
 
 ### Main menu
 
