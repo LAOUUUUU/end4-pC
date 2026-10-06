@@ -40,6 +40,8 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 
 ### Main menu
 
+Click the **♪** item in the menu bar to open the themed main menu. It has the blurred cover as its background, the now-playing header, the playback controls, and rows for the window, lyrics, and app actions. Right-click ♪ for the plain menu. The system menu bar at the top of the screen cannot be drawn in custom colours by any app, so it keeps macOS's style.
+
 The menu bar has **EndLyrics**, **Playback**, **View**, **Lyrics**, **Window**, and **Help** menus. The app now shows in the Dock so the menu bar appears when it is active.
 
 | Menu | Items |

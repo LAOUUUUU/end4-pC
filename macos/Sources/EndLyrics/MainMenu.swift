@@ -8,8 +8,8 @@ import SwiftUI
 /// Every item is a thin call into the same models the window uses.
 @MainActor
 final class MainMenuController: NSObject {
-    private let model: LyricsModel
-    private let theme: ThemeModel
+    let model: LyricsModel
+    let theme: ThemeModel
     private let showSettings: () -> Void
     private let togglePanel: () -> Void
 
@@ -102,34 +102,34 @@ final class MainMenuController: NSObject {
 
     // MARK: - Playback
 
-    @objc private func playPause() { model.togglePlayPause() }
-    @objc private func next() { model.command(.next) }
-    @objc private func previous() { model.command(.previous) }
-    @objc private func volumeUp() { model.setVolume(min(100, model.volume + 10)) }
-    @objc private func volumeDown() { model.setVolume(max(0, model.volume - 10)) }
-    @objc private func toggleShuffle() { model.toggleShuffle() }
-    @objc private func toggleRepeat() { model.toggleRepeat() }
+    @objc func playPause() { model.togglePlayPause() }
+    @objc func next() { model.command(.next) }
+    @objc func previous() { model.command(.previous) }
+    @objc func volumeUp() { model.setVolume(min(100, model.volume + 10)) }
+    @objc func volumeDown() { model.setVolume(max(0, model.volume - 10)) }
+    @objc func toggleShuffle() { model.toggleShuffle() }
+    @objc func toggleRepeat() { model.toggleRepeat() }
 
     // MARK: - View
 
-    @objc private func toggleWindow() { togglePanel() }
-    @objc private func toggleNowPlaying() { model.expanded.toggle() }
-    @objc private func toggleCompact() { theme.settings.compactMode.toggle() }
-    @objc private func toggleMirror() {
+    @objc func toggleWindow() { togglePanel() }
+    @objc func toggleNowPlaying() { model.expanded.toggle() }
+    @objc func toggleCompact() { theme.settings.compactMode.toggle() }
+    @objc func toggleMirror() {
         theme.settings.style = theme.settings.style == .mirror ? .bars : .mirror
     }
 
     // MARK: - Lyrics
 
-    @objc private func saveLRC() { save(extension: "lrc") }
-    @objc private func saveTXT() { save(extension: "txt") }
-    @objc private func toggleMilliseconds() { millisecondTimestamps.toggle() }
-    @objc private func offsetLater() { theme.settings.lyricOffset = min(3, theme.settings.lyricOffset + 0.25) }
-    @objc private func offsetEarlier() { theme.settings.lyricOffset = max(-3, theme.settings.lyricOffset - 0.25) }
-    @objc private func offsetReset() { theme.settings.lyricOffset = 0 }
-    @objc private func toggleClickToSeek() { theme.settings.clickToSeek.toggle() }
+    @objc func saveLRC() { save(extension: "lrc") }
+    @objc func saveTXT() { save(extension: "txt") }
+    @objc func toggleMilliseconds() { millisecondTimestamps.toggle() }
+    @objc func offsetLater() { theme.settings.lyricOffset = min(3, theme.settings.lyricOffset + 0.25) }
+    @objc func offsetEarlier() { theme.settings.lyricOffset = max(-3, theme.settings.lyricOffset - 0.25) }
+    @objc func offsetReset() { theme.settings.lyricOffset = 0 }
+    @objc func toggleClickToSeek() { theme.settings.clickToSeek.toggle() }
 
-    private var millisecondTimestamps = false
+    var millisecondTimestamps = false
 
     private func save(extension ext: String) {
         let lines = model.loadedLines
@@ -157,20 +157,20 @@ final class MainMenuController: NSObject {
 
     // MARK: - Window and help
 
-    @objc private func about() { NSApp.orderFrontStandardAboutPanel(nil) }
-    @objc private func settings() { showSettings() }
-    @objc private func minimize() { NSApp.keyWindow?.miniaturize(nil) }
-    @objc private func closeWindow() { NSApp.keyWindow?.performClose(nil) }
+    @objc func about() { NSApp.orderFrontStandardAboutPanel(nil) }
+    @objc func settings() { showSettings() }
+    @objc func minimize() { NSApp.keyWindow?.miniaturize(nil) }
+    @objc func closeWindow() { NSApp.keyWindow?.performClose(nil) }
 
-    @objc private func showSources() {
+    @objc func showSources() {
         alert("Lyric sources", "LRCLIB is tried first (free, public, documented). NetEase Cloud Music is used when LRCLIB has nothing. NetEase's API is unofficial and can change without notice.")
     }
 
-    @objc private func showPermissions() {
+    @objc func showPermissions() {
         alert("Permissions", "Automation: allow EndLyrics to control Spotify (System Settings > Privacy & Security > Automation).\nSystem Audio Recording: needed for the visualizer (Privacy & Security > Screen & System Audio Recording).")
     }
 
-    @objc private func openProject() {
+    @objc func openProject() {
         if let url = URL(string: "https://github.com/LAOUUUUU/end4-pC") {
             NSWorkspace.shared.open(url)
         }

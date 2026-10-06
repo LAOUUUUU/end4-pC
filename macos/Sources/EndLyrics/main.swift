@@ -36,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var offsetSubscription: AnyCancellable?
     private var expandSubscription: AnyCancellable?
     private var mainMenu: MainMenuController?
+    private var quickMenu: NSMenu?
+    private let themedMenu = NSPopover()
     private var playerSubscription: AnyCancellable?
     private var sourceSubscription: AnyCancellable?
 
@@ -112,6 +114,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makeStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.title = "♪"
+        // Left click opens the themed main menu; right click opens the plain menu.
+        item.button?.target = self
+        item.button?.action = #selector(statusItemClicked(_:))
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
         let menu = NSMenu()
         let toggle = NSMenuItem(title: "Hide Lyrics", action: #selector(togglePanel), keyEquivalent: "")
@@ -123,9 +129,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit EndLyrics", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
-        item.menu = menu
+        quickMenu = menu
         statusItem = item
         toggleItem = toggle
+    }
+
+    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
+        if NSApp.currentEvent?.type == .rightMouseUp, let quickMenu, let statusItem {
+            statusItem.popUpMenu(quickMenu)
+            return
+        }
+        toggleThemedMenu(sender)
+    }
+
+    private func toggleThemedMenu(_ anchor: NSStatusBarButton) {
+        if themedMenu.isShown {
+            themedMenu.performClose(nil)
+            return
+        }
+        guard let mainMenu else { return }
+        themedMenu.behavior = .transient
+        themedMenu.contentViewController = NSHostingController(rootView: ThemedMenuView(
+            model: model,
+            theme: theme,
+            actions: mainMenu,
+            showSettings: { [weak self] in self?.showSettings() },
+            toggleWindow: { [weak self] in self?.togglePanel() },
+            quit: { NSApp.terminate(nil) }
+        ))
+        themedMenu.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
     }
 
     @objc private func togglePanel() {
