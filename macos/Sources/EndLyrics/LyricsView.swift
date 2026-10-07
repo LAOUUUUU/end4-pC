@@ -137,13 +137,14 @@ struct LyricsStack: View {
             }
             // Only the slide between lines is animated here. The sweep has its own, shorter animation.
             .animation(.spring(response: 0.6, dampingFraction: 0.9), value: active)
-            // One row is the floor and 7 is the ideal, so this shrinks before the controls below it
-            // are pushed out of a small window, instead of forcing room for 7 rows no matter what.
+            // One row is the floor, 7 is the natural size, and that is also the ceiling: this must
+            // shrink before the controls below it are pushed out of a small window, but it must not
+            // grow past 7 rows in a tall one, or the lines bunch at the top with a gap below them.
             .frame(
                 maxWidth: .infinity,
                 minHeight: rowHeight,
                 idealHeight: rowHeight * (compact ? 1 : 7),
-                maxHeight: .infinity,
+                maxHeight: rowHeight * (compact ? 1 : 7),
                 alignment: .topLeading
             )
             .clipped()
