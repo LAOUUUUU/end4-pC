@@ -37,6 +37,11 @@ struct LyricsView: View {
                 WindowDragHandle()
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            ResizeGripIcon()
+                .padding(6)
+                .background(ResizeGripHandle())
+        }
     }
 
     @ViewBuilder

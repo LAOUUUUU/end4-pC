@@ -48,6 +48,7 @@ The lyric panel is editable:
 
 - **Resize** it by dragging its edges (300 × 260 pt at least). It remembers its size and place between launches.
 - **Move** it by dragging any empty part.
+- A small grip in the bottom-right corner is a visible handle for resizing, since the panel's borderless edges give no hint that they are draggable too.
 - **Choose what it shows** under Settings → Lyric panel: the visualizer, and the progress bar, volume and controls.
 
 The full-screen main menu opens when EndLyrics starts. While the menu is the focused window, the lyric panel steps aside. It returns as soon as you switch to another app or Space, and steps aside again when you come back to the menu. Turn this off under Settings → "Open the main menu when EndLyrics starts". The lyric window is still shown alongside it.
@@ -67,10 +68,14 @@ The full-screen menu has a widget column, ported from the shell's widgets:
 - **Timer.** A 5, 15, 30, or 60 minute countdown. With "Pause music when it ends" on, it pauses playback when it reaches zero.
 - **Notes.** A free-text pad, saved between launches.
 - **To-do.** Add, tick off, and remove tasks, saved between launches.
+- **Device.** macOS version, uptime, and battery charge (from `IOPSCopyPowerSourcesInfo`, the same API System Settings uses).
+- **Clipboard history.** The last 30 things you copied (text only), polled from the pasteboard once a second. Click an entry to copy it back. Ported from the shell's Cliphist.
 
 The columns size to the window, so the menu fits any screen size. Now Playing has its own button to return to the standard size.
 
-Not ported yet: the weather and calendar widgets, which need an outside weather service or calendar permission. The equalizer depends on EasyEffects, which is Linux-only.
+Not ported yet: the weather and calendar widgets, which need an outside weather service or calendar permission; song recognition (SongRec), which would need ShazamKit; and lyrics translation, which would need Apple's Translation framework. Each needs its own check before it is built.
+
+Deliberately not ported: the shell's anime image-board browser (Booru) mixes in adult content even on tagged-safe boards, so it is not in this app. Its AI chat widget and its Google Cloud integration would need your own API key (and, for Google, a sign-in), so they wait for you to say which provider and supply the key yourself. The equalizer depends on EasyEffects, which is Linux-only.
 
 ### Saving lyrics
 

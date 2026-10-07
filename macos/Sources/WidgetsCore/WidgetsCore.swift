@@ -101,3 +101,53 @@ public enum ClockFormat {
         return formatter.string(from: date)
     }
 }
+
+/// Battery line for the widget: percent and charging state. Ported from the shell's battery indicator.
+public enum BatteryFormat {
+    public static func summary(percent: Int?, charging: Bool) -> String? {
+        guard let percent else { return nil }
+        return charging ? "\(percent)% · Charging" : "\(percent)%"
+    }
+}
+
+/// How long the Mac has been up, as "2d 4h", "3h 20m", or "5m".
+public enum UptimeFormat {
+    public static func string(seconds: Int) -> String {
+        let days = seconds / 86_400
+        let hours = (seconds % 86_400) / 3_600
+        let minutes = (seconds % 3_600) / 60
+        if days > 0 { return "\(days)d \(hours)h" }
+        if hours > 0 { return "\(hours)h \(minutes)m" }
+        return "\(minutes)m"
+    }
+}
+
+/// Recently copied text, newest first. Ported from the shell's clipboard history (Cliphist).
+public struct ClipboardHistory: Codable, Equatable, Sendable {
+    public let limit: Int
+    public private(set) var items: [String] = []
+
+    public init(limit: Int = 30) {
+        self.limit = limit
+    }
+
+    /// Adds an entry at the front. An entry already present moves to the front instead of duplicating.
+    /// Blank text is ignored.
+    public mutating func add(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        items.removeAll { $0 == trimmed }
+        items.insert(trimmed, at: 0)
+        if items.count > limit {
+            items.removeLast(items.count - limit)
+        }
+    }
+
+    public mutating func remove(_ text: String) {
+        items.removeAll { $0 == text }
+    }
+
+    public mutating func clear() {
+        items.removeAll()
+    }
+}

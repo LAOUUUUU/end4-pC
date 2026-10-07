@@ -1,6 +1,8 @@
+import AppKit
 import Combine
 import Darwin
 import Foundation
+import IOKit.ps
 import WidgetsCore
 
 /// CPU and memory from Mach host statistics, sampled every two seconds. Ported from the shell's resources widget.
@@ -8,6 +10,13 @@ import WidgetsCore
 final class SystemStats: ObservableObject {
     @Published private(set) var cpuPercent = 0.0
     @Published private(set) var memoryPercent = 0.0
+    /// Battery charge, 0...100, or nil on a Mac with no battery.
+    @Published private(set) var batteryPercent: Int?
+    @Published private(set) var batteryCharging = false
+    /// "2d 4h", from UptimeFormat. Ported from the shell's system info service.
+    @Published private(set) var uptimeText = ""
+    let macOSVersion = "macOS " + ProcessInfo.processInfo.operatingSystemVersionString
+        .replacingOccurrences(of: "Version ", with: "")
 
     private var previousTicks: [UInt32] = []
     private var timer: Timer?
@@ -31,6 +40,20 @@ final class SystemStats: ObservableObject {
             usedBytes: Self.usedMemory(),
             totalBytes: ProcessInfo.processInfo.physicalMemory
         )
+        (batteryPercent, batteryCharging) = Self.readBattery()
+        uptimeText = UptimeFormat.string(seconds: Int(ProcessInfo.processInfo.systemUptime))
+    }
+
+    /// Charge level and whether it is on AC power, from the same API System Settings uses.
+    private static func readBattery() -> (Int?, Bool) {
+        guard let blob = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources = IOPSCopyPowerSourcesList(blob)?.takeRetainedValue() as? [CFTypeRef],
+              let source = sources.first,
+              let info = IOPSGetPowerSourceDescription(blob, source)?.takeUnretainedValue() as? [String: Any]
+        else { return (nil, false) }
+        let percent = info[kIOPSCurrentCapacityKey] as? Int
+        let charging = (info[kIOPSPowerSourceStateKey] as? String) == kIOPSACPowerValue
+        return (percent, charging)
     }
 
     /// user, system, idle, nice: the order `CPUUsage` expects.
@@ -127,12 +150,63 @@ final class TodoStore: ObservableObject {
     }
 }
 
+/// Recently copied text, polled from the system pasteboard. Ported from the shell's Cliphist.
+@MainActor
+final class ClipboardWatcher: ObservableObject {
+    private static let key = "io.github.endlyrics.clipboard"
+
+    @Published var history: ClipboardHistory {
+        didSet { save() }
+    }
+
+    private var lastChangeCount = NSPasteboard.general.changeCount
+    private var timer: Timer?
+
+    init() {
+        if let data = UserDefaults.standard.data(forKey: Self.key),
+           let saved = try? JSONDecoder().decode(ClipboardHistory.self, from: data) {
+            history = saved
+        } else {
+            history = ClipboardHistory()
+        }
+    }
+
+    func start() {
+        guard timer == nil else { return }
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.poll() }
+        }
+    }
+
+    private func poll() {
+        let pasteboard = NSPasteboard.general
+        guard pasteboard.changeCount != lastChangeCount else { return }
+        lastChangeCount = pasteboard.changeCount
+        guard let text = pasteboard.string(forType: .string) else { return }
+        history.add(text)
+    }
+
+    /// Copies an entry back to the pasteboard, without re-adding it as a new entry.
+    func copyBack(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        lastChangeCount = pasteboard.changeCount
+    }
+
+    private func save() {
+        guard let data = try? JSONEncoder().encode(history) else { return }
+        UserDefaults.standard.set(data, forKey: Self.key)
+    }
+}
+
 /// Everything the widgets need, created once and shared with the full-screen menu.
 @MainActor
 final class WidgetHub: ObservableObject {
     let stats = SystemStats()
     let countdown = CountdownModel()
     let todo = TodoStore()
+    let clipboard = ClipboardWatcher()
 
     /// Time zones shown in the world clock, in order.
     let worldClocks: [(label: String, zone: TimeZone)] = [

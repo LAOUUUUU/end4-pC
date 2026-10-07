@@ -120,3 +120,35 @@ final class ClockFormatTests: XCTestCase {
         XCTAssertEqual(tokyo, "05:26")
     }
 }
+
+final class BatteryFormatTests: XCTestCase {
+    func testChargingShowsTheState() {
+        XCTAssertEqual(BatteryFormat.summary(percent: 82, charging: true), "82% · Charging")
+    }
+
+    func testNotChargingShowsOnlyThePercent() {
+        XCTAssertEqual(BatteryFormat.summary(percent: 54, charging: false), "54%")
+    }
+
+    func testNoBatteryIsNil() {
+        XCTAssertNil(BatteryFormat.summary(percent: nil, charging: false))
+    }
+}
+
+final class UptimeFormatTests: XCTestCase {
+    func testDaysAndHours() {
+        XCTAssertEqual(UptimeFormat.string(seconds: 2 * 86_400 + 4 * 3_600 + 500), "2d 4h")
+    }
+
+    func testHoursAndMinutesUnderADay() {
+        XCTAssertEqual(UptimeFormat.string(seconds: 3 * 3_600 + 20 * 60), "3h 20m")
+    }
+
+    func testMinutesOnlyUnderAnHour() {
+        XCTAssertEqual(UptimeFormat.string(seconds: 5 * 60 + 10), "5m")
+    }
+
+    func testJustStarted() {
+        XCTAssertEqual(UptimeFormat.string(seconds: 10), "0m")
+    }
+}

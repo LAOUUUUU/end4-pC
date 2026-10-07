@@ -13,10 +13,13 @@ struct WidgetsView: View {
         VStack(alignment: .leading, spacing: 14) {
             clock
             stats
+            device
             countdown
             notesCard
             todo
+            clipboard
         }
+        .onAppear { hub.clipboard.start() }
     }
 
     private var clock: some View {
@@ -45,6 +48,19 @@ struct WidgetsView: View {
             meter("Memory", hub.stats.memoryPercent)
         }
         .onAppear { hub.stats.start() }
+    }
+
+    private var device: some View {
+        HStack(spacing: 14) {
+            Label(hub.stats.macOSVersion, systemImage: "laptopcomputer")
+            Label(hub.stats.uptimeText, systemImage: "clock.arrow.circlepath")
+            if let percent = BatteryFormat.summary(percent: hub.stats.batteryPercent, charging: hub.stats.batteryCharging) {
+                Label(percent, systemImage: hub.stats.batteryCharging ? "battery.100.bolt" : "battery.75")
+            }
+        }
+        .font(.system(size: 10))
+        .foregroundStyle(.white.opacity(0.6))
+        .labelStyle(.titleOnly)
     }
 
     private func meter(_ label: String, _ percent: Double) -> some View {
@@ -109,6 +125,46 @@ struct WidgetsView: View {
                 .font(.system(size: 12))
                 .scrollContentBackground(.hidden)
                 .frame(height: 80)
+        }
+        .card()
+    }
+
+    private var clipboard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("CLIPBOARD").font(.system(size: 9, weight: .semibold)).foregroundStyle(.white.opacity(0.5))
+                Spacer()
+                if !hub.clipboard.history.items.isEmpty {
+                    Button("Clear") { hub.clipboard.history.clear() }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+            }
+            if hub.clipboard.history.items.isEmpty {
+                Text("Copied text shows up here.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.45))
+            }
+            ForEach(hub.clipboard.history.items.prefix(6), id: \.self) { entry in
+                HStack(spacing: 8) {
+                    Button { hub.clipboard.copyBack(entry) } label: {
+                        Text(entry)
+                            .font(.system(size: 11))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .foregroundStyle(.white.opacity(0.85))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                    Button {
+                        hub.clipboard.history.remove(entry)
+                    } label: {
+                        Image(systemName: "xmark").font(.system(size: 8)).foregroundStyle(.white.opacity(0.4))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
         .card()
     }
