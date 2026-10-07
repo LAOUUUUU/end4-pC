@@ -24,6 +24,10 @@ final class VisualizerModel: ObservableObject {
     private let shared = SharedBands()
     private var timer: Task<Void, Never>?
     private var subscription: AnyCancellable?
+    /// True between "should be playing" and "should not be", independent of whether the tap is
+    /// actually delivering audio right now. Used by the silence watchdog below.
+    private var playing = false
+    private var lastNonSilentAt = Date()
 
     /// Connects the visualizer to a source of "is Spotify playing" changes.
     func follow(_ isPlaying: Published<Bool>.Publisher) {
@@ -43,6 +47,7 @@ final class VisualizerModel: ObservableObject {
     }
 
     private func setPlaying(_ playing: Bool) {
+        self.playing = playing
         if playing {
             startTapIfNeeded()
         } else {
@@ -83,8 +88,12 @@ final class VisualizerModel: ObservableObject {
     }
 
     /// Redraws at about 30 frames per second, easing the bars toward the latest analysis.
+    /// Also watches for the tap having gone silent while playback should be going: Spotify can swap
+    /// which of its processes is actually producing audio (for example around a track change), which
+    /// leaves a tap attached to the old, now-silent one with no "isPlaying changed" event to notice by.
     private func startTimer() {
         timer?.cancel()
+        lastNonSilentAt = Date()
         timer = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
@@ -95,6 +104,15 @@ final class VisualizerModel: ObservableObject {
                 self.peaks = zip(self.peaks, self.bands).map { peak, level in
                     PeakHold.step(peak: peak, level: level, fall: Self.peakFall)
                 }
+
+                if target.contains(where: { $0 > 0.01 }) {
+                    self.lastNonSilentAt = Date()
+                } else if self.playing, Date().timeIntervalSince(self.lastNonSilentAt) > 3 {
+                    self.lastNonSilentAt = Date()
+                    self.stopTap()
+                    self.startTapIfNeeded()
+                }
+
                 try? await Task.sleep(for: .milliseconds(33))
             }
         }

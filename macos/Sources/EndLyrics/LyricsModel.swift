@@ -187,9 +187,15 @@ final class LyricsModel: ObservableObject {
     /// The app the last read came from. The visualizer taps that app's audio.
     @Published private(set) var source: MusicSource = .spotify
 
-    /// Sends a playback command to the current app.
+    /// Sends a playback command to the current app, then polls right away rather than waiting up
+    /// to a second for the next scheduled poll. A skip otherwise looked laggy: the track, lyrics
+    /// and visualizer all stayed on the old song until the next tick happened to land.
     func command(_ command: PlayerCommand) {
-        Task { await router.command(command) }
+        Task {
+            await router.command(command)
+            try? await Task.sleep(for: .milliseconds(150))
+            await poll()
+        }
     }
 
     /// True while the user drags the volume slider, so polls do not fight the drag.
@@ -212,7 +218,11 @@ final class LyricsModel: ObservableObject {
 
     func togglePlayPause() {
         isPlaying.toggle()
-        Task { await router.command(.playPause) }
+        Task {
+            await router.command(.playPause)
+            try? await Task.sleep(for: .milliseconds(150))
+            await poll()
+        }
     }
 
     func toggleShuffle() {

@@ -175,10 +175,15 @@ struct LyricsStack: View {
             }
         }
         .fontWeight(isActive ? .bold : .regular)
-        .opacity(visible ? opacity(distance: level) : 0)
         // One line per row. Long lines shrink to fit the width instead of being cut off.
         .lineLimit(1)
         .minimumScaleFactor(0.45)
+        // Weight and the width-dependent shrink above must snap, not crossfade: bold glyphs are
+        // wider than regular ones, so a crossfade briefly overlapped two different sizes of the
+        // same line, which looked like the lyrics doubling. The slide, scale and fade below this
+        // are unaffected and keep animating with the rest of the row.
+        .transaction { $0.animation = nil }
+        .opacity(visible ? opacity(distance: level) : 0)
         .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
         .scaleEffect(scale(distance: level), anchor: .leading)
         // Rows sit one slot apart, the active line in the middle slot (slot 3 of 0...6).

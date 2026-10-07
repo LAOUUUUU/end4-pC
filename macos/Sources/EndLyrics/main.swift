@@ -141,7 +141,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let origin = NSPoint(x: area.minX + 24, y: area.maxY - size.height - 24)
         let panel = NSPanel(
             contentRect: NSRect(origin: origin, size: size),
-            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView, .resizable],
+            // No .resizable here: the visible grip handles resizing itself (with its own min/max
+            // clamp), and AppKit's native edge-drag on a borderless window fought it for the same
+            // gesture near the corner, which is what made resizing feel buggy.
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
