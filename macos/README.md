@@ -40,7 +40,7 @@ The app runs from the menu bar (♪). Use it to show or hide the lyrics window, 
 
 ### Buttons
 
-Buttons are Material-style, ported from the shell's ripple button: a flash from the press, a tint on hover, corners that tighten while pressed, and an accent fill when toggled on.
+Buttons are Material-style, ported from the shell's ripple button: a flash from the press, a tint on hover, corners that tighten while pressed, and an accent fill when toggled on. The active lyric line is bold; the rest are regular weight, crossfading as the active line changes.
 
 ### Main menu
 
@@ -71,9 +71,22 @@ The full-screen menu has a widget column, ported from the shell's widgets:
 - **Device.** macOS version, uptime, and battery charge (from `IOPSCopyPowerSourcesInfo`, the same API System Settings uses).
 - **Clipboard history.** The last 30 things you copied (text only), polled from the pasteboard once a second. Click an entry to copy it back. Ported from the shell's Cliphist.
 
+### AI chat
+
+The **Ai** page in the full-screen menu is a chat with Claude, using your own Anthropic API key. It is the macOS equivalent of the shell's generic LLM chat (`Ai.qml`), narrowed to Claude.
+
+- Add your key under Settings → AI chat. It is stored in your login keychain (`io.github.endlyrics.anthropic-api-key`), never in UserDefaults or a settings file.
+- Nothing is sent until a key is set; the Ai page shows a prompt to add one instead.
+- Pick the model (Sonnet, Opus, or Haiku) under the same settings.
+- Requests go straight from your Mac to `api.anthropic.com/v1/messages`. The app has no server of its own.
+
+### Lyrics translation
+
+On macOS 15 and later, Settings → Lyrics translation shows a translation of the active line underneath it, using Apple's on-device Translation framework (`TranslationSession`). This is the macOS equivalent of the shell's `GoogleCloud.qml` plus `Translation.qml`, done without a Google Cloud project, a service-account key, or sending lyrics to a server: translation runs on the device. Apple's own note is that it may log the app and the language pair, never the text.
+
 The columns size to the window, so the menu fits any screen size. Now Playing has its own button to return to the standard size.
 
-Not ported yet: the weather and calendar widgets, which need an outside weather service or calendar permission; song recognition (SongRec), which would need ShazamKit; and lyrics translation, which would need Apple's Translation framework. Each needs its own check before it is built.
+Not ported yet: the weather and calendar widgets, which need an outside weather service or calendar permission; and song recognition (SongRec), which would need ShazamKit.
 
 Deliberately not ported: the shell's anime image-board browser (Booru) mixes in adult content even on tagged-safe boards, so it is not in this app. Its AI chat widget and its Google Cloud integration would need your own API key (and, for Google, a sign-in), so they wait for you to say which provider and supply the key yourself. The equalizer depends on EasyEffects, which is Linux-only.
 

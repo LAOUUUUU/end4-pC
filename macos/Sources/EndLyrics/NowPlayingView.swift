@@ -52,8 +52,13 @@ struct NowPlayingView: View {
 
             VisualizerView(model: visualizer, theme: theme)
             ProgressBarView(fraction: model.progress, accent: theme.accent) { model.seek(toFraction: $0) }
-            LyricsStack(model: model, theme: theme, baseFont: 20)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            VStack(alignment: .leading, spacing: 4) {
+                LyricsStack(model: model, theme: theme, baseFont: 20)
+                if #available(macOS 15.0, *), theme.settings.translateLyrics {
+                    TranslatedLine(text: model.currentLineText, targetCode: theme.settings.translationLanguage.isEmpty ? nil : theme.settings.translationLanguage)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             VolumeSliderView(model: model, theme: theme)
             PlaybackControlsView(model: model, theme: theme)
         }

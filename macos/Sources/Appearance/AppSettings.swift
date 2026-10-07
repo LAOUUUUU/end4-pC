@@ -63,6 +63,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var panelShowsVisualizer = true
     /// Show the progress bar, volume and playback controls in the lyric panel.
     public var panelShowsControls = true
+    /// Show an on-device translation of the active lyric line (macOS 15+).
+    public var translateLyrics = false
+    /// BCP-47 language code to translate into, or "" for the device's language.
+    public var translationLanguage = ""
+    /// Claude model used for the AI chat page.
+    public var aiModel = "claude-sonnet-5-5"
 
     public init() {}
 
@@ -86,13 +92,16 @@ public struct AppSettings: Codable, Equatable, Sendable {
         openMainMenuAtLaunch = try c.decodeIfPresent(Bool.self, forKey: .openMainMenuAtLaunch) ?? defaults.openMainMenuAtLaunch
         panelShowsVisualizer = try c.decodeIfPresent(Bool.self, forKey: .panelShowsVisualizer) ?? defaults.panelShowsVisualizer
         panelShowsControls = try c.decodeIfPresent(Bool.self, forKey: .panelShowsControls) ?? defaults.panelShowsControls
+        translateLyrics = try c.decodeIfPresent(Bool.self, forKey: .translateLyrics) ?? defaults.translateLyrics
+        translationLanguage = try c.decodeIfPresent(String.self, forKey: .translationLanguage) ?? defaults.translationLanguage
+        aiModel = try c.decodeIfPresent(String.self, forKey: .aiModel) ?? defaults.aiModel
         player = try c.decodeIfPresent(PlayerChoice.self, forKey: .player) ?? defaults.player
     }
 
     private enum Keys: String, CodingKey {
         case barCount, style, showPeakCaps, colorSource, solidColor, lyricOffset, compactMode
         case clickToSeek, lyricScale, backgroundBlur, backgroundImagePath, notifyOnTrackChange, player, openMainMenuAtLaunch
-        case panelShowsVisualizer, panelShowsControls
+        case panelShowsVisualizer, panelShowsControls, translateLyrics, translationLanguage, aiModel
     }
 
     /// The same settings with out-of-range values pulled back into the allowed set.

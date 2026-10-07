@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let visualizer = VisualizerModel()
     private let theme = ThemeModel()
     private let widgets = WidgetHub()
+    private let chat = AIChatModel()
     private var panel: NSPanel?
     private var statusItem: NSStatusItem?
     private var toggleItem: NSMenuItem?
@@ -78,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self, self.widgets.countdown.pausesMusic, self.model.isPlaying else { return }
             self.model.togglePlayPause()
         }
-        let fullscreen = FullscreenMenuController(model: model, theme: theme, visualizer: visualizer, hub: widgets, actions: menu)
+        let fullscreen = FullscreenMenuController(model: model, theme: theme, visualizer: visualizer, hub: widgets, chat: chat, actions: menu)
         fullscreenMenu = fullscreen
         menu.openFullscreen = { fullscreen.show() }
         menu.openSettings = { fullscreen.show(page: .settings) }

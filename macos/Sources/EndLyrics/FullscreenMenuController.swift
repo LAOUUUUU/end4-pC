@@ -20,6 +20,7 @@ final class EscapableWindow: NSWindow {
 enum FullscreenPage: Equatable {
     case home
     case settings
+    case ai
 }
 
 /// Holds the page, so Settings can be opened straight into the full-screen window.
@@ -38,13 +39,15 @@ final class FullscreenMenuController {
     private let theme: ThemeModel
     private let visualizer: VisualizerModel
     private let hub: WidgetHub
+    private let chat: AIChatModel
     private let actions: MainMenuController
 
-    init(model: LyricsModel, theme: ThemeModel, visualizer: VisualizerModel, hub: WidgetHub, actions: MainMenuController) {
+    init(model: LyricsModel, theme: ThemeModel, visualizer: VisualizerModel, hub: WidgetHub, chat: AIChatModel, actions: MainMenuController) {
         self.model = model
         self.theme = theme
         self.visualizer = visualizer
         self.hub = hub
+        self.chat = chat
         self.actions = actions
     }
 
@@ -72,6 +75,7 @@ final class FullscreenMenuController {
             theme: theme,
             visualizer: visualizer,
             hub: hub,
+            chat: chat,
             navigator: navigator,
             actions: actions,
             close: { [weak window] in window?.close() }

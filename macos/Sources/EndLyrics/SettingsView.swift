@@ -7,6 +7,13 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @ObservedObject var theme: ThemeModel
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
+    @State private var apiKey = KeychainStore.read() ?? ""
+
+    private static let languages: [(String, String)] = [
+        ("en", "English"), ("es", "Spanish"), ("fr", "French"), ("de", "German"),
+        ("ja", "Japanese"), ("ko", "Korean"), ("zh-Hans", "Chinese (Simplified)"),
+        ("pt", "Portuguese"), ("it", "Italian"), ("ru", "Russian"), ("ar", "Arabic"), ("hi", "Hindi"),
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -95,6 +102,38 @@ struct SettingsView: View {
                 Text("Drag the panel's edges to resize it. It remembers its size and place.")
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.55))
+            }
+
+            section("AI chat") {
+                SecureField("Anthropic API key", text: $apiKey)
+                    .textFieldStyle(.plain)
+                    .padding(8)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.08)))
+                    .onChange(of: apiKey) { _, newValue in KeychainStore.write(newValue) }
+                Text(apiKey.isEmpty ? "Stored only in your login keychain. Get a key at console.anthropic.com." : "Key saved in your login keychain.")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.55))
+                Picker("Model", selection: binding(\.aiModel)) {
+                    Text("Claude Sonnet 5.5").tag("claude-sonnet-5-5")
+                    Text("Claude Opus 5.5").tag("claude-opus-5-5")
+                    Text("Claude Haiku 4.5").tag("claude-haiku-4-5-20251001")
+                }
+                .pickerStyle(.segmented)
+            }
+
+            if #available(macOS 15.0, *) {
+                section("Lyrics translation") {
+                    Toggle("Show a translation under the active line", isOn: binding(\.translateLyrics))
+                    Picker("Translate into", selection: binding(\.translationLanguage)) {
+                        Text("Device language").tag("")
+                        ForEach(Self.languages, id: \.0) { code, name in
+                            Text(name).tag(code)
+                        }
+                    }
+                    Text("Runs on this Mac. Apple may log the app and the language pair, never the text.")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.55))
+                }
             }
 
             section("Background") {

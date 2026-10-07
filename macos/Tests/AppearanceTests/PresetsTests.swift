@@ -101,3 +101,23 @@ final class PanelItemSettingsTests: XCTestCase {
         XCTAssertTrue(decoded.panelShowsControls)
     }
 }
+
+final class TranslationAndAISettingsTests: XCTestCase {
+    func testTranslationIsOffByDefaultWithNoLanguageChosen() {
+        let settings = AppSettings()
+
+        XCTAssertFalse(settings.translateLyrics)
+        XCTAssertEqual(settings.translationLanguage, "")
+    }
+
+    func testAIModelHasASensibleDefault() {
+        XCTAssertEqual(AppSettings().aiModel, "claude-sonnet-5-5")
+    }
+
+    func testOlderSettingsKeepTheseDefaults() throws {
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"barCount":16}"#.utf8))
+
+        XCTAssertFalse(decoded.translateLyrics)
+        XCTAssertEqual(decoded.aiModel, "claude-sonnet-5-5")
+    }
+}

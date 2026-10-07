@@ -14,9 +14,10 @@ let package = Package(
         .target(name: "Appearance"),
         .target(name: "WidgetsCore"),
         .target(name: "AppleMusicKit", dependencies: ["SpotifyKit"]),
+        .target(name: "AIChatKit"),
         .executableTarget(
             name: "EndLyrics",
-            dependencies: ["LyricsCore", "SpotifyKit", "AudioVisualizer", "Appearance", "AppleMusicKit", "WidgetsCore"]
+            dependencies: ["LyricsCore", "SpotifyKit", "AudioVisualizer", "Appearance", "AppleMusicKit", "WidgetsCore", "AIChatKit"]
         ),
         .testTarget(name: "LyricsCoreTests", dependencies: ["LyricsCore"]),
         .testTarget(name: "SpotifyKitTests", dependencies: ["SpotifyKit"]),
@@ -24,6 +25,7 @@ let package = Package(
         .testTarget(name: "AppearanceTests", dependencies: ["Appearance"]),
         .testTarget(name: "AppleMusicKitTests", dependencies: ["AppleMusicKit"]),
         .testTarget(name: "WidgetsCoreTests", dependencies: ["WidgetsCore"]),
+        .testTarget(name: "AIChatKitTests", dependencies: ["AIChatKit"]),
     ],
     swiftLanguageModes: [.v5]
 )

@@ -10,6 +10,7 @@ struct FullscreenMenuView: View {
     @ObservedObject var theme: ThemeModel
     let visualizer: VisualizerModel
     @ObservedObject var hub: WidgetHub
+    @ObservedObject var chat: AIChatModel
     @ObservedObject var navigator: FullscreenNavigator
     let actions: MainMenuController
     let close: () -> Void
@@ -20,6 +21,8 @@ struct FullscreenMenuView: View {
             let rightWidth = min(460, max(300, geometry.size.width * 0.34))
             let lyricSize = min(30, max(16, geometry.size.height / 24))
 
+            // Without an explicit size, the ZStack just grows to fit its content, so the settings
+            // ScrollView never gets a bounded height to clip against and cannot scroll.
             ZStack(alignment: .topTrailing) {
                 CoverBackdrop(url: theme.artworkURL, colors: theme.backgroundColors, blur: theme.settings.backgroundBlur, imagePath: theme.settings.backgroundImagePath)
                     .equatable()
@@ -34,6 +37,9 @@ struct FullscreenMenuView: View {
                             .frame(maxWidth: 640, alignment: .leading)
                             .padding(.bottom, 24)
                     }
+                } else if navigator.page == .ai {
+                    AIChatView(chat: chat, theme: theme) { navigator.page = .settings }
+                        .frame(maxWidth: 640, maxHeight: .infinity, alignment: .leading)
                 } else {
                     HStack(alignment: .top, spacing: 32) {
                         nowPlayingColumn(lyricSize: lyricSize)
@@ -69,6 +75,7 @@ struct FullscreenMenuView: View {
                 .padding(.top, 14)
                 .padding(.trailing, 18)
             }
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .foregroundStyle(.white)
     }
@@ -76,7 +83,7 @@ struct FullscreenMenuView: View {
     /// Home and Settings, shown in the same window.
     private var pageSwitch: some View {
         HStack(spacing: 4) {
-            ForEach([(FullscreenPage.home, "Home"), (FullscreenPage.settings, "Settings")], id: \.1) { page, title in
+            ForEach([(FullscreenPage.home, "Home"), (FullscreenPage.ai, "Ai"), (FullscreenPage.settings, "Settings")], id: \.1) { page, title in
                 Button(title) { navigator.page = page }
                     .buttonStyle(RippleButtonStyle(radius: 12, toggled: navigator.page == page, accent: theme.accent))
                     .font(.system(size: 12, weight: .semibold))
@@ -110,8 +117,13 @@ struct FullscreenMenuView: View {
                 }
             }
 
-            LyricsStack(model: model, theme: theme, baseFont: lyricSize)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            VStack(alignment: .leading, spacing: 4) {
+                LyricsStack(model: model, theme: theme, baseFont: lyricSize)
+                if #available(macOS 15.0, *), theme.settings.translateLyrics {
+                    TranslatedLine(text: model.currentLineText, targetCode: theme.settings.translationLanguage.isEmpty ? nil : theme.settings.translationLanguage)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             VStack(spacing: 12) {
                 ProgressBarView(fraction: model.progress, accent: theme.accent) { model.seek(toFraction: $0) }
@@ -130,6 +142,7 @@ struct FullscreenMenuView: View {
                 tile("doc.text", "Save .txt", "Plain") { actions.saveTXT() }
                 tile("doc.on.clipboard", "Copy Lyrics", "Whole song") { actions.copyAllLyrics() }
                 tile("gearshape", "Settings", "All options") { navigator.page = .settings }
+            tile("bubble.left.and.bubble.right", "Ask Claude", "AI chat") { navigator.page = .ai }
             }
             timingCard
         }

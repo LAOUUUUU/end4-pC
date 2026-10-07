@@ -19,14 +19,26 @@ struct LyricsView: View {
                 header
                 expandButton
             }
+            .layoutPriority(1)
             if !settings.compactMode && settings.panelShowsVisualizer {
                 VisualizerView(model: visualizer, theme: theme)
+                    .layoutPriority(1)
             }
+            // Lower priority than everything else here, so as the panel shrinks, the lyric
+            // area is what gives up space first and the controls below it stay on screen.
             LyricsStack(model: model, theme: theme, baseFont: 16, compact: settings.compactMode)
+                .layoutPriority(-1)
+            if #available(macOS 15.0, *), theme.settings.translateLyrics {
+                TranslatedLine(text: model.currentLineText, targetCode: theme.settings.translationLanguage.isEmpty ? nil : theme.settings.translationLanguage)
+                    .layoutPriority(1)
+            }
             if !settings.compactMode && settings.panelShowsControls {
                 ProgressBarView(fraction: model.progress, accent: theme.accent)
+                    .layoutPriority(1)
                 VolumeSliderView(model: model, theme: theme)
+                    .layoutPriority(1)
                 PlaybackControlsView(model: model, theme: theme)
+                    .layoutPriority(1)
             }
         }
         .padding(16)
@@ -125,7 +137,15 @@ struct LyricsStack: View {
             }
             // Only the slide between lines is animated here. The sweep has its own, shorter animation.
             .animation(.spring(response: 0.6, dampingFraction: 0.9), value: active)
-            .frame(maxWidth: .infinity, minHeight: rowHeight * (compact ? 1 : 7), alignment: .topLeading)
+            // One row is the floor and 7 is the ideal, so this shrinks before the controls below it
+            // are pushed out of a small window, instead of forcing room for 7 rows no matter what.
+            .frame(
+                maxWidth: .infinity,
+                minHeight: rowHeight,
+                idealHeight: rowHeight * (compact ? 1 : 7),
+                maxHeight: .infinity,
+                alignment: .topLeading
+            )
             .clipped()
         } else {
             Color.clear
@@ -140,8 +160,9 @@ struct LyricsStack: View {
         let text = model.lineText(at: index)
         let display = text.isEmpty ? "♪" : text
 
-        // Every row uses the same font and weight. Only the scale and opacity change with distance,
-        // so a line that is moving does not also change its size or width in the same moment.
+        // Every row uses the same point size (the scale effect below is the one thing that makes
+        // the active line bigger, so size is never applied twice). Weight crossfades with the slide:
+        // bold for the line coming up, regular for the one stepping back.
         return Group {
             if isActive, !model.activeWords.isEmpty {
                 KaraokeLine(text: display, progress: model.lineProgress, accent: theme.accent)
@@ -152,6 +173,7 @@ struct LyricsStack: View {
                     .foregroundStyle(.white)
             }
         }
+        .fontWeight(isActive ? .bold : .regular)
         .opacity(visible ? opacity(distance: level) : 0)
         // One line per row. Long lines shrink to fit the width instead of being cut off.
         .lineLimit(1)
