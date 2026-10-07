@@ -70,7 +70,7 @@ final class FullscreenMenuController {
         window.backgroundColor = .black
         window.collectionBehavior = [.fullScreenPrimary]
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: FullscreenMenuView(
+        let content = NSHostingView(rootView: FullscreenMenuView(
             model: model,
             theme: theme,
             visualizer: visualizer,
@@ -80,6 +80,12 @@ final class FullscreenMenuController {
             actions: actions,
             close: { [weak window] in window?.close() }
         ))
+        // Without this, the hosting view can resize the window to match SwiftUI's reported "ideal"
+        // size for GeometryReader-based content, fighting the full-screen transition. The window
+        // then settles at a size GeometryReader never actually measured, and everything positioned
+        // from geometry.size ends up wrong, which is what "the menu is misplaced" was.
+        content.sizingOptions = []
+        window.contentView = content
         window.onClose = { [weak self] in self?.onVisibilityChange?(false) }
         // The menu is "shown" only while it is the key window and on a visible Space. Otherwise the panel returns.
         for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification, NSWindow.didChangeOcclusionStateNotification] {
