@@ -56,6 +56,10 @@ struct FullscreenMenuView: View {
                     }
                 }
                 }
+                // Pages that do not stretch themselves (Settings and Ai do not) were being pushed
+                // into the ZStack's top-trailing corner instead of filling the menu. This pins the
+                // whole content block to the full area regardless of which page is showing.
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(.horizontal, margin)
                 .padding(.top, 56)
                 .padding(.bottom, margin)
